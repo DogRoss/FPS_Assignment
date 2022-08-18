@@ -12,22 +12,38 @@ public class Movement : MonoBehaviour
 
 
     [Header("Ground/Wall Movement Values")]
+    public LayerMask groundMask;
+    public LayerMask wallMask;
     [Tooltip("Acceleration of player when on ground, accelerates differently based on what 'Ground Force Type' is applied.")]
     public float groundSpeed = 10f;
-    [Tooltip("speed at which the player falls while sliding on the wall")]
-    public float wallFallMultiplier = 0.5f;
-    public float wallSpeed = 20f;
+    [Tooltip("Coefficient of forces that act against the Player when in motion.")]
+    [Range(0, 1)]
+    public float groundFrictionCoefficient = 0.1f;
+    //[Tooltip("speed at which the player falls while sliding on the wall")]
+    //public float wallFallMultiplier = 0.5f;
+    //public float wallSpeed = 20f;
 
     private float finalGroundSpeed;
 
     [Header("Air Movement Values")]
-    public float dragCoefficient = .25f;
+    [Range(0, 1)]
+    public float airControlCoefficientX = 0.5f;
+    [Range(0, 1)]
+    public float airControlCoefficientZ = 0.5f;
+    [Tooltip("how much air drag affects the acceleration imposed by gravity.")]
+    [Range(0,1)]
+    public float verticalDragCoefficient = .25f;
+    [Tooltip("how much air drag affects the acceleration imposed by gravity.")]
+    [Range(0, 1)]
+    public float horizontalDragCoefficient = .25f;
+    [Tooltip("amount of down force the player will accelerate to when in the air.")]
     public float gravity = 0.5f;
-    public float gravityCoefficient = 1.5f;
+    [Tooltip("The rate at which the player accelerates from imposed gravity.")]
+    public float gravityAcceleration = .1f;
 
     [Header("Jump Values")]
+    [Tooltip("force used to send player into the air.")]
     public float jumpForce = 10f;
-    public float jumpGravityCoefficient = 1f;
 
     private float jumpPower = 0f;
     private bool jumpHeld;
@@ -40,11 +56,8 @@ public class Movement : MonoBehaviour
     public float groundCheckYOffset = 0f;
 
     //Raycast/Ground Check
-    private bool grounded;
-    private bool touchingWall;
-    private float currentGroundFriction;
-    private RaycastHit hit;
-    private Ray ray;
+    public bool grounded;
+    public bool touchingWall;
 
     //Input
     private Vector3 direction = Vector3.zero;
@@ -69,85 +82,66 @@ public class Movement : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        //handle movement and ground detection
-        ray.origin = transform.position + (transform.up * groundCheckYOffset);
-        ray.direction = -transform.up;
-        if (Physics.Raycast(ray, out hit, groundCheckDistance, groundLayers))
+        //ground detection
+        if (controller.collisionFlags == CollisionFlags.Below)
         {
-            grounded = true;
-            if (!jumpHeld)
-                finalDir.y = 0;
-
-            if (direction.magnitude > 0)
-            {
-                xAxis = direction.x * finalGroundSpeed;
-                zAxis = direction.z * finalGroundSpeed;
-
-                Vector3 preDir = transform.right * xAxis + transform.forward * zAxis;
-                finalDir.x = preDir.x; finalDir.z = preDir.z;
-            }
-            else
-            {
-                finalDir.x = 0;
-                finalDir.z = 0;
-            }
+            
         }
-        else if (!jumpHeld)
+        else if(
+        (controller.collisionFlags.HasFlag(CollisionFlags.Sides) &&
+        !controller.collisionFlags.HasFlag(CollisionFlags.Below)))
         {
-            grounded = false;
-            currentGroundFriction = 0.01f;
-            AirPhysics();
-            //finalDir = AirDirection();
+            
         }
-
-        controller.Move(finalDir);
-
-        /*
-        //print(finalDir);
-
-        //handle friction
-        if (grounded)
+        if(controller.collisionFlags != CollisionFlags.Below)
         {
-            if (rb.velocity.magnitude > 0.1f)
-            {
-                rb.AddForce(-(rb.velocity.normalized * currentGroundFriction), ForceMode2D.Force);
-            }
-            else
-                rb.velocity = Vector3.zero;
-        }
-        else
-        {
-            AirPhysics();
-        }
-        */
-    }
-    private void OnCollisionEnter(Collision collision)
-    {
-        //if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
-        //{
-        //    //cache friction/bounce here for equating
-        //    Ground ground = collision.transform.GetComponent<Ground>();
-        //    currentGroundFriction = ground.friction;
-        //}
-
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
-        {
-            touchingWall = true;
-            Debug.Log("Hit wall");
-        }
-    }
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
-        {
-            Debug.Log("shouldnt this work?");
             touchingWall = false;
+            grounded = false;
+            GravityPhysics();
+            AirMovement();
+        }
+
+        //handle friction/drag/gravity and slow down player at a rate
+        if (grounded)
+            GroundFriction();
+        else 
+        {
+            AirDrag();
+            Debug.Log("called air");
+        }
+
+        //apply forces to controller
+        controller.Move(finalDir);
+    }
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        Debug.Log("called hitThing: " + LayerMask.LayerToName(hit.gameObject.layer));
+
+        if(hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        {
+            Debug.Log("called ground");
+            touchingWall = false;
+            grounded = true;
+            GroundMovement();
+        }
+        else if(hit.gameObject.layer == wallMask.value)
+        {
+            Debug.Log(controller.collisionFlags.HasFlag(CollisionFlags.Below) + " // how many: " + (controller.collisionFlags & CollisionFlags.Above));
+            Debug.Log("called wall");
+            //TODO: handle wall here
+            touchingWall = true;
+            grounded = false;
+            WallSlide();
+            GravityPhysics();
+            AirMovement();
         }
     }
     private void OnDrawGizmos()
     {
         //draw groundcheck raycast
         Debug.DrawLine(transform.position + (transform.up * groundCheckYOffset), (transform.position + (transform.up * groundCheckYOffset)) - (transform.up * groundCheckDistance), Color.red);
+
+        Debug.DrawLine(transform.position, transform.position  + finalDir * 3);
     }
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Input System Functions
@@ -161,15 +155,13 @@ public class Movement : MonoBehaviour
         if(value.Get<float>() > 0)
         {
             jumpHeld = true;
-            StartCoroutine(Jump());
-            Debug.Log("held");
+            if (grounded)
+                Jump(false);
+            else if (touchingWall)
+                Jump(true);
         }
         else if(value.Get<float>() == 0)
-        {
-            StopCoroutine(Jump());
             jumpHeld = false;
-            Debug.Log("release");
-        }
     }
     private void OnMouseChange(InputValue value)
     {
@@ -185,60 +177,111 @@ public class Movement : MonoBehaviour
     {
         return Vector3.zero;
     }
+    /* 
+     * Handles camera movement for looking around */
     private void HandleCamera()
     {
         Vector3 axis = mouseVector;
         axis.y = 0;
-        cam.transform.Rotate(axis, 1);
+        cam.transform.Rotate(axis, 3);
 
         axis.y = mouseVector.y;
         axis.x = 0;
-        transform.Rotate(axis, 1);
+        transform.Rotate(axis, 3);
     }
-    private void AirPhysics()
+    private void GravityPhysics()
     {
-        if(finalDir.y > -gravity)
+        if (finalDir.y > -gravity)
+            finalDir.y -= gravityAcceleration;
+
+        finalDir.y = Mathf.Clamp(finalDir.y, -gravity, Mathf.Infinity);
+    }
+    /*
+     * Handles Jump Forces on player based on if the player is on a wall or on ground */
+    private void Jump(bool wallJump)
+    {
+        if (wallJump)
         {
-            print("AirPhysics - if greater than gravity");
-            finalDir.y -= gravity * gravityCoefficient;
-            finalDir.y = -gravity;
+
         }
         else
-        {
-            print("AirPhysics - else");
-            finalDir.y = -gravity;
-        }
+            finalDir.y = jumpForce;
     }
-    private Vector3 AirDirection()
-    {
-        Vector3 airDir = Vector3.zero;
-        Vector3 currentDir = finalDir;
 
+    /*
+     * Handles what direction the player will move in based on being in the air and input direction */
+    private void AirMovement()
+    {
+        //make sure we are NOT grounded
+        if (grounded)
+            return;
+
+        //get input from correct axis
+        xAxis = direction.x * finalGroundSpeed;
+        zAxis = direction.z * finalGroundSpeed;
+
+        //account for player face                    
+        finalDir += (transform.right * xAxis * airControlCoefficientX) + (transform.forward * zAxis * airControlCoefficientZ);
+
+        //clamp to max speed to ensure we do not get too fast
+        Vector2 clampee = new Vector2(finalDir.x, finalDir.z);
+        if(clampee.magnitude > finalGroundSpeed)
+        {
+            clampee = clampee.normalized * finalGroundSpeed;
+        }
+
+        finalDir.x = clampee.x;
+        finalDir.z = clampee.y;
+    }
+    /*
+     * Handles what direction the player will move in based on being grounded and input direction */
+    private void GroundMovement()
+    {
+        //make sure we are grounded
+        if (!grounded)
+            return;
+
+        //make sure gravity isnt affecting us
+        if (!jumpHeld)
+            finalDir.y = 0;
+
+        //check input and handle movement
         if (direction.magnitude > 0)
         {
-            airDir = currentDir * dragCoefficient;
-            airDir.y = finalDir.y;
-        }
-        else
-        {
-            airDir = currentDir * dragCoefficient;
-            airDir.y = finalDir.y;
-        }
+            xAxis = direction.x * finalGroundSpeed;
+            zAxis = direction.z * finalGroundSpeed;
 
-        return airDir;
-    }
-    private IEnumerator Jump()
-    {
-        print("start jump routine");
-        jumpHeld = true;
-        jumpPower = jumpForce;
-        while(jumpPower > 0 && jumpHeld)
-        {
-            Debug.Log("call");
-            jumpPower -= gravity * jumpGravityCoefficient; 
-            finalDir.y = jumpPower;
-            yield return null;
+            //account for player face                    
+            Vector3 preDir = transform.right * xAxis + transform.forward * zAxis;
+            finalDir.x = preDir.x; finalDir.z = preDir.z;
         }
-        yield return null;
+    }
+
+    
+    /*
+     * -v- Handles forces that oppose Player's movement on the ground */
+    private void GroundFriction()
+    {
+        if (finalDir.x != 0)
+            finalDir.x -= finalDir.x * groundFrictionCoefficient;
+        if (finalDir.z != 0)
+            finalDir.z -= finalDir.z * groundFrictionCoefficient;
+    }
+    /*
+     * Handles Forces in air that oppose Player's movement through the air */
+    private void AirDrag()
+    {
+        if (finalDir.magnitude > 0)
+        {
+            finalDir.x -= finalDir.x * horizontalDragCoefficient;
+            finalDir.y -= finalDir.y * verticalDragCoefficient;
+            finalDir.z -= finalDir.z * horizontalDragCoefficient;
+        }
+    }
+    /*
+     * Handles how the Player moves against the wall in a sliding motion */
+    private void WallSlide()
+    {
+
     }
 }

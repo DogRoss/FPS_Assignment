@@ -404,7 +404,7 @@ GameObject:
   - component: {fileID: 873268901}
   - component: {fileID: 873268900}
   - component: {fileID: 873268899}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -443,7 +443,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: abb1d3e4d20d3ec499e085fac01a4497, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -481,8 +481,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 873268898}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 48.3}
-  m_LocalScale: {x: 99.4, y: 9.86, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 66.4}
+  m_LocalScale: {x: 279.85, y: 130.8, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
@@ -838,7 +838,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1977783754}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 128.9, z: 0}
+  m_LocalPosition: {x: 0, y: 6.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 528758559}
@@ -858,19 +858,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f8dd8fed2b17ca45a6f09d9354c1649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 64
+  wallMask:
+    serializedVersion: 2
+    m_Bits: 128
   groundSpeed: 5
-  wallFallMultiplier: 0.5
-  wallSpeed: 20
-  dragCoefficient: 0.9
-  gravity: 1
-  gravityCoefficient: 0.1
-  jumpForce: 5
-  jumpGravityCoefficient: 0.1
+  groundFrictionCoefficient: 0.1
+  airControlCoefficientX: 0.1
+  airControlCoefficientZ: 0.1
+  verticalDragCoefficient: 0
+  horizontalDragCoefficient: 0.01
+  gravity: 9.81
+  gravityAcceleration: 0.03
+  jumpForce: 1
   groundLayers:
     serializedVersion: 2
     m_Bits: 64
   groundCheckDistance: 1
-  groundCheckYOffset: -0.1
+  groundCheckYOffset: -0.2
+  grounded: 0
+  touchingWall: 0
   finalDir: {x: 0, y: 0, z: 0}
 --- !u!143 &1977783760
 CharacterController:
