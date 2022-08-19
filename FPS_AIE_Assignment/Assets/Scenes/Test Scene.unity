@@ -858,14 +858,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f8dd8fed2b17ca45a6f09d9354c1649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 64
-  wallMask:
-    serializedVersion: 2
-    m_Bits: 128
   groundSpeed: 5
-  groundFrictionCoefficient: 0.1
+  groundFrictionCoefficient: 0.4
+  wallFallCoefficient: 0.5
+  wallSpeed: 5
   airControlCoefficientX: 0.1
   airControlCoefficientZ: 0.1
   verticalDragCoefficient: 0
@@ -873,14 +869,10 @@ MonoBehaviour:
   gravity: 9.81
   gravityAcceleration: 0.03
   jumpForce: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  groundCheckDistance: 1
-  groundCheckYOffset: -0.2
   grounded: 0
   touchingWall: 0
   finalDir: {x: 0, y: 0, z: 0}
+  finalDirMag: 0
 --- !u!143 &1977783760
 CharacterController:
   m_ObjectHideFlags: 0
