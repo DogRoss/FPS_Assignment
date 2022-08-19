@@ -860,28 +860,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 20
   acceleration: 5
+  gravity: 2
   GACoefficient: 1
   MGSCoefficient: 1
-  groundControlCoefficient: 0.7
   groundFrictionCoefficient: 0.1
   wallFallCoefficient: 0.3
   MWSCoefficient: 1
   WACoefficient: 1
   wallJumpForceX: 6
   wallJumpForceY: 0.5
-  AACoefficient: 5
+  AACoefficient: 1
   MASCoefficient: 1
-  airControlCoefficientX: 0.1
-  airControlCoefficientZ: 0.1
-  verticalDragCoefficient: 0
-  horizontalDragCoefficient: 0.123
-  gravity: 9.81
-  gravityAcceleration: 0.03
-  jumpForce: 1
+  verticalDragCoefficient: 0.03
+  horizontalDragCoefficient: 0.1
+  jumpForce: 50
   grounded: 0
   touchingWall: 0
-  finalDir: {x: 0, y: 0, z: 0}
-  mag: 0
 --- !u!143 &1977783760
 CharacterController:
   m_ObjectHideFlags: 0
