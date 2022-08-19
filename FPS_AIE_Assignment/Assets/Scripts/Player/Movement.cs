@@ -318,16 +318,24 @@ public class Movement : MonoBehaviour
     }
     /*
      * Gets the normalized direction towards the wall thats currently being touched */
-    private Vector3 GetDirToWall()
+    private Vector3 GetJumpingDirection()
     {
+        //check if we are touching wall
         if (!touchingWall)
             return Vector3.zero;
-        Vector3 returnVec = (wallPoint - transform.position).normalized;
-        return returnVec;
+
+        //direction towards wall, cache player velocity
+        Vector3 wallDirVec = (wallPoint - transform.position).normalized;
+        Vector3 playerVel = controller.velocity;
+
+        //get dot product of two axis to figure out player face in relation
+        float forwardDot = Vector3.Dot(direc, transform.forward);
+        float sideWaysDot = Vector3.Dot(direc, transform.right);
+
+
     }
     //private Vector3 PlaceHolder()
     //{
-    //    float forwardDot = Vector3.Dot(direc, transform.forward);
-    //    float sideWaysDot = Vector3.Dot(direc, transform.right);
+    //    
     //}
 }

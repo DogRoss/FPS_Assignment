@@ -860,7 +860,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   groundSpeed: 5
   groundFrictionCoefficient: 0.4
-  wallFallCoefficient: 0.5
+  wallFallCoefficient: 0.3
   wallSpeed: 5
   airControlCoefficientX: 0.1
   airControlCoefficientZ: 0.1
