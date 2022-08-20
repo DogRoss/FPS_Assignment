@@ -865,14 +865,14 @@ MonoBehaviour:
   MGSCoefficient: 1
   groundFrictionCoefficient: 0.1
   wallFallCoefficient: 0.3
-  MWSCoefficient: 1
   WACoefficient: 1
+  MWSCoefficient: 1
   wallJumpForceX: 6
   wallJumpForceY: 0.5
-  AACoefficient: 1
-  MASCoefficient: 1
+  AACoefficient: 0.5
+  MASCoefficient: 2
   verticalDragCoefficient: 0.03
-  horizontalDragCoefficient: 0.1
+  horizontalDragCoefficient: 0.01
   jumpForce: 50
   grounded: 0
   touchingWall: 0

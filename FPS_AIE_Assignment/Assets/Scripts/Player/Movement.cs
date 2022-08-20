@@ -30,12 +30,14 @@ public class Movement : MonoBehaviour
 
 
     [Header("Wall Movement Values")]
-    [Tooltip("Speed at which the Player falls while sliding on the wall.")]
-    public float wallFallCoefficient = 0.1f;
-    [Tooltip("Max Wall Speed Coefficient: put desc here.")]
-    public float MWSCoefficient = 1f;
+    [Tooltip("Wall Gravity Coefficient: Speed at which the Player falls while sliding on the wall.")]
+    public float WGCoefficient = 0.1f;
+    [Tooltip("Max Wall Gravity Coefficient: max speed the player can travel down on the Y Axis")]
+    public float MWGCoefficient = .5f;
     [Tooltip("Wall Acceleration Coefficient: put desc here.")]
     public float WACoefficient = 1f;
+    [Tooltip("Max Wall Speed Coefficient: put desc here.")]
+    public float MWSCoefficient = 1f;
     public float wallJumpForceX = 2f;
     public float wallJumpForceY = 5f;
 
@@ -92,20 +94,24 @@ public class Movement : MonoBehaviour
             Vector3 moveVec = ((GroundMovement() - GroundFriction()) + (Vector3.up * currentVerticalSpeed));
             controller.Move(moveVec * Time.deltaTime);
         }
-        else
+        else if(!touchingWall)
         {
             //account for gravity
-            if (!touchingWall)
-                currentVerticalSpeed -= gravity;
+            currentVerticalSpeed -= gravity;
 
             Vector3 moveVec = (AirMovement() - AirDrag()) + (Vector3.up * currentVerticalSpeed);
             controller.Move(moveVec * Time.deltaTime);
+        }
+        else
+        {
+            //is touching wall, so account for wall slide
+            Vector3 moveVec = WallSlide();
+            controller.Move(Vector3.up * currentVerticalSpeed);
         }
 
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-
         //print(hit.collider.name + " // " + LayerMask.LayerToName(hit.gameObject.layer));
 
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
@@ -118,7 +124,6 @@ public class Movement : MonoBehaviour
             touchingWall = true;
             grounded = false;
             wallPoint = hit.point;
-            WallSlide();
         }
     }
 
@@ -304,34 +309,49 @@ public class Movement : MonoBehaviour
     }
     /*
      * Handles how the Player moves against the wall in a sliding motion */
-    private void WallSlide()
-    {
-        ////gravity
-        //if (currentVerticalSpeed > -gravity * wallFallCoefficient)
-        //    currentVerticalSpeed -= gravity * wallFallCoefficient;
-        //currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * wallFallCoefficient, gravity);
+    private Vector3 WallSlide()
+    {   
+        /*
+         * first, set gravity based on wall values
+         * find direction towards wall
+         * check which way the player is facing in relation to wall using Dot Product
+         * using Dot Product, find which way the player will slide along the wall
+         * after finding direction, keep magnitude and apply it to slide direction
+         * apply wall gravity
+         */
 
-        ////get the direction towards the wall that was hit
-        //direc = (wallPoint - transform.position).normalized;
-        //float wallPull = 0.1f;
-        //testVect = wallPoint;
+        //check if we are touching wall
+        if (!touchingWall)
+            return Vector3.zero;
 
-        ////test to see how close to which side one is
-        ////the closer the dot is to 0 means more perpendicular
-        ////the closer the dot is to -1/1 means either facing same way or opposite way
-        //float forwardDot = Vector3.Dot(direc, transform.forward);
-        //float sideWaysDot = Vector3.Dot(direc, transform.right);
-        ////Debug.Log(forwardDot + " forward // sideWays: " + sideWaysDot);
+        //calculate gravity on wall
+        if (currentVerticalSpeed > -gravity * WGCoefficient)
+            currentVerticalSpeed -= gravity * WGCoefficient;
+        currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
+
+        Vector3 vel = controller.velocity;
+        vel.y = 0;
+
+        //get the direction towards the wall that was hit
+        Vector3 wallDir = (wallPoint - transform.position).normalized;
+        float wallPull = 0.1f;
+        
+
+        //test to see how close to which side one is
+        //the closer the dot is to 0 means more perpendicular
+        //the closer the dot is to -1/1 means either facing same way or opposite way
+        float forwardDot = Vector3.Dot(wallDir, transform.forward);
+        float sideWaysDot = Vector3.Dot(wallDir, transform.right);
 
         //float wallSpeedCoefficient = Mathf.Abs(sideWaysDot);
         ////account for player forward
-        //horizontalDir.x += transform.forward.x; horizontalDir.z += transform.forward.z;
+        //vel.x = transform.forward.x; vel.z = transform.forward.z;
 
-        //horizontalDir.x *= wallSpeedCoefficient;
-        //horizontalDir.z *= wallSpeedCoefficient;
+        //vel.x *= wallSpeedCoefficient;
+        //vel.z *= wallSpeedCoefficient;
 
-        ////account for wall direction
-        //horizontalDir.x += direc.x * wallPull; horizontalDir.z = direc.z * wallPull;
+        //account for wall direction
+        //vel.x += direc.x * wallPull; horizontalDir.z = direc.z * wallPull;
 
         //Vector2 vec2FDir = new Vector2(horizontalDir.x, horizontalDir.z);
         //if(vec2FDir.magnitude > (maxSpeed * MWSCoefficient))
@@ -339,6 +359,8 @@ public class Movement : MonoBehaviour
         //    vec2FDir = vec2FDir.normalized * (maxSpeed * MWSCoefficient);
         //    horizontalDir.x = vec2FDir.x; horizontalDir.z = vec2FDir.y;
         //}
+
+        return Vector3.zero;
     }
     /*
      * Handles Jumping off wall */
