@@ -588,7 +588,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1297376008
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -860,20 +860,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 20
   acceleration: 5
-  gravity: 2
+  gravity: 1.5
   GACoefficient: 1
   MGSCoefficient: 1
-  groundFrictionCoefficient: 0.1
-  wallFallCoefficient: 0.3
-  WACoefficient: 1
-  MWSCoefficient: 1
-  wallJumpForceX: 6
+  groundFrictionCoefficient: 0.2
+  WGCoefficient: 0.8
+  MWGCoefficient: 6
+  WACoefficient: 0.3
+  MWSCoefficient: 2
+  wallJumpForceX: 4
   wallJumpForceY: 0.5
-  AACoefficient: 0.5
-  MASCoefficient: 2
+  wallFrictionCoefficient: 0.1
+  AACoefficient: 0.1
+  MASCoefficient: 5
   verticalDragCoefficient: 0.03
   horizontalDragCoefficient: 0.01
-  jumpForce: 50
+  jumpForce: 30
   grounded: 0
   touchingWall: 0
 --- !u!143 &1977783760
