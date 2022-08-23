@@ -44,7 +44,7 @@ public class Movement : MonoBehaviour
     [Range(0, 1)]
     public float wallFrictionCoefficient = 0.1f;
 
-    private Vector3 wallPoint;
+    private ControllerColliderHit wallPointHit;
 
 
     [Header("Air Movement Values")]
@@ -77,6 +77,7 @@ public class Movement : MonoBehaviour
     private Vector3 playerInputDirec = Vector3.zero;
 
     Vector3 vec;
+    Vector3 wallThing = Vector3.zero;
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Built In Engine Functions
@@ -113,10 +114,7 @@ public class Movement : MonoBehaviour
         else
         {
             //is touching wall, so account for wall slide
-            if (moveVec.magnitude < maxSpeed * MWSCoefficient)
-                moveVec += WallSlide();
-            else
-                moveVec = moveVec.normalized * (maxSpeed * MWSCoefficient);
+            WallSlide();
             moveVec.y = currentVerticalSpeed;
             controller.Move(moveVec * Time.deltaTime);
         }
@@ -135,7 +133,7 @@ public class Movement : MonoBehaviour
         {
             touchingWall = true;
             grounded = false;
-            wallPoint = hit.point;
+            wallPointHit = hit;
         }
     }
 
@@ -147,6 +145,8 @@ public class Movement : MonoBehaviour
 
         Debug.DrawLine(transform.position, transform.position + vec, Color.blue);
         Debug.DrawLine(transform.position, transform.position + playerInputDirec, Color.green);
+        if(wallPointHit != null)
+            Debug.DrawLine(wallPointHit.point, wallPointHit.point + wallThing, Color.magenta);
     }
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Input System Functions
@@ -324,7 +324,7 @@ public class Movement : MonoBehaviour
     }
     /*
      * Handles how the Player moves against the wall in a sliding motion */
-    private Vector3 WallSlide()
+    private void WallSlide()
     {
 
         /*
@@ -342,28 +342,38 @@ public class Movement : MonoBehaviour
         currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
 
         //get the direction towards the wall that was hit
-        Vector3 wallDir = (wallPoint - transform.position).normalized;
-        wallDir.y = 0;
+        Vector3 wallForward = Vector3.Cross(wallPointHit.normal, Vector3.up); //use this to apply forces
+        wallThing = wallForward;
         //store input in relation to where the player is facing
         playerInputDirec = transform.forward * direction.z + transform.right * direction.x;
         playerInputDirec.y = 0;
 
-        //test to see how close to which side one is
+        //see which way in relation to wall the player inputs towards
         //the closer the dot is to 0 means more perpendicular
         //the closer the dot is to -1/1 means either facing same way or opposite way
-        float sideWaysDot = Vector3.Dot(transform.right, wallDir);
-        float inputDot = Vector3.Dot(wallDir, playerInputDirec);
+        float inputDot = Vector3.Dot(wallForward, playerInputDirec);
 
         Debug.Log(inputDot + " Input doooooot");
-        //Debug.Log(sideWaysDot + " sideways doooooot");
+        //take input dot and smoothly accelerate towards that direction
 
-
-
-        moveVec = wallDir.normalized * moveVec.magnitude;
-        wallDir *= WACoefficient * sideWaysDot;
-        vec = wallDir;
-
-        return wallDir;
+        if(inputDot > 0)
+        {
+            //move towards one side
+            moveVec = wallForward.normalized * (moveVec.x + moveVec.z);
+            if(CurrentHorizontalSpeed < maxSpeed * MWSCoefficient)
+                moveVec += moveVec.normalized * WACoefficient;
+            else
+                moveVec = moveVec.normalized * (maxSpeed * MWSCoefficient);
+        }
+        if(inputDot < 0)
+        {
+            //move towards the other
+            moveVec = wallForward.normalized * (moveVec.x + moveVec.z);
+            if (CurrentHorizontalSpeed < maxSpeed * MWSCoefficient)
+                moveVec += moveVec.normalized * WACoefficient;
+            else
+                moveVec = moveVec.normalized * (maxSpeed * MWSCoefficient);
+        }
     }
     //private Vector3 WallSlide()
     //{
