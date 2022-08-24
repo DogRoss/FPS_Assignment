@@ -15,9 +15,11 @@ public class Movement : MonoBehaviour
     public float acceleration = 5f;
     [Tooltip("acceleration rate of DownForce the player will experience when in the air.")]
     public float gravity = 0.5f;
+    [Tooltip("force used to send player into the air.")]
+    public float jumpForce = 10f;
 
     private float currentVerticalSpeed = 0f;
-
+    private bool doubleJumped = false;
 
     [Header("Ground Movement Values")]
     [Tooltip("Ground Acceleration Coefficient: multiplied by 'Acceleration' to get the acceleration of Player when touching the ground.")]
@@ -36,10 +38,8 @@ public class Movement : MonoBehaviour
     public float MWGCoefficient = .5f;
     [Tooltip("Wall Acceleration Coefficient: put desc here.")]
     public float WACoefficient = 1f;
-    [Tooltip("Max Wall Speed Coefficient: put desc here.")]
-    public float MWSCoefficient = 1f;
-    public float wallJumpForceX = 2f;
-    public float wallJumpForceY = 5f;
+    [Tooltip("Wall Jump Coefficient: multiplied by jump force to get force when jumping on wall, z is forward of player")]
+    public Vector3 WJCoefficient = Vector3.zero;
     [Tooltip("Coefficient of forces that act against the Player when in motion against a wall.")]
     [Range(0, 1)]
     public float wallFrictionCoefficient = 0.1f;
@@ -60,24 +60,19 @@ public class Movement : MonoBehaviour
     public float horizontalDragCoefficient = .25f;
 
 
-    [Header("Jump Values")]
-    [Tooltip("force used to send player into the air.")]
-    public float jumpForce = 10f;
-
-
     //Raycast/Ground Check
-    public bool grounded;
-    public bool touchingWall;
+    private bool grounded;
+    private bool touchingWall;
+
 
     //Input
     private Vector3 direction = Vector3.zero;
     private Vector3 mouseVector = Vector3.zero;
-    //Applied
+    //Applied Input
     private Vector3 moveVec = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
 
-    Vector3 vec;
-    Vector3 wallThing = Vector3.zero;
+    public float sped;
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Built In Engine Functions
@@ -90,6 +85,7 @@ public class Movement : MonoBehaviour
     private void Update()
     {
         HandleCamera();
+        sped = CurrentHorizontalSpeed;
     }
     private void FixedUpdate()
     {
@@ -100,7 +96,9 @@ public class Movement : MonoBehaviour
         //apply forces to controller
         if (grounded)
         {
-            moveVec = ((GroundMovement() - GroundFriction()) + (Vector3.up * currentVerticalSpeed));
+            GroundMovement();
+            GroundFriction();
+            moveVec.y = currentVerticalSpeed;
             controller.Move(moveVec * Time.deltaTime);
         }
         else if(!touchingWall)
@@ -108,13 +106,16 @@ public class Movement : MonoBehaviour
             //account for gravity
             currentVerticalSpeed -= gravity;
 
-            moveVec = (AirMovement() - AirDrag()) + (Vector3.up * currentVerticalSpeed);
+            AirMovement();
+            AirDrag();
+            moveVec.y = currentVerticalSpeed;
             controller.Move(moveVec * Time.deltaTime);
         }
         else
         {
             //is touching wall, so account for wall slide
             WallSlide();
+            WallFriction();
             moveVec.y = currentVerticalSpeed;
             controller.Move(moveVec * Time.deltaTime);
         }
@@ -128,12 +129,16 @@ public class Movement : MonoBehaviour
         {
             touchingWall = false;
             grounded = true;
+            if (doubleJumped)
+                doubleJumped = false;
         }
         else if (!grounded && hit.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
             touchingWall = true;
             grounded = false;
             wallPointHit = hit;
+            if (doubleJumped)
+                doubleJumped = false;
         }
     }
 
@@ -143,10 +148,7 @@ public class Movement : MonoBehaviour
         if(controller && controller.velocity != null)
             Debug.DrawLine(transform.position, transform.position + controller.velocity.normalized * 3);
 
-        Debug.DrawLine(transform.position, transform.position + vec, Color.blue);
         Debug.DrawLine(transform.position, transform.position + playerInputDirec, Color.green);
-        if(wallPointHit != null)
-            Debug.DrawLine(wallPointHit.point, wallPointHit.point + wallThing, Color.magenta);
     }
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Input System Functions
@@ -163,6 +165,11 @@ public class Movement : MonoBehaviour
                 Jump(false);
             else if (touchingWall)
                 Jump(true);
+            else if (!doubleJumped)
+            {
+                Jump(false);
+                doubleJumped = true;
+            }
         }
     }
     private void OnMouseChange(InputValue value)
@@ -210,7 +217,7 @@ public class Movement : MonoBehaviour
 
     /*
      * Handles what direction the player will move in based on being in the air and input direction */
-    private Vector3 AirMovement()
+    private void AirMovement()
     {
         /* grab current velocity, this will be the value that forces act against;
          * take directional input and account for transform.forward;
@@ -220,12 +227,11 @@ public class Movement : MonoBehaviour
         //make sure we are grounded
         if (grounded)
         {
-            print("return");
-            return controller.velocity;
+            return;
         }
 
         //store velocity
-        Vector3 vel = controller.velocity;
+        Vector3 vel = moveVec;
         vel.y = 0;
 
         //get directional input and account for player forward
@@ -239,12 +245,12 @@ public class Movement : MonoBehaviour
         if(vel.magnitude > maxSpeed * MASCoefficient)
             vel = vel.normalized * (maxSpeed * MASCoefficient);
 
-        return vel;
+        moveVec = vel;
     }
 
     /*
      * Handles what direction the player will move in based on being grounded and input direction */
-    private Vector3 GroundMovement()
+    private void GroundMovement()
     {
         /* grab current velocity, this will be the value that forces act against;
          * take directional input and account for transform.forward;
@@ -253,10 +259,7 @@ public class Movement : MonoBehaviour
 
         //make sure we are grounded
         if (!grounded)
-        {
-            print("return");
-            return controller.velocity;
-        }
+            return;
         else
             currentVerticalSpeed = -.1f;
 
@@ -277,13 +280,13 @@ public class Movement : MonoBehaviour
         if (vel.magnitude > maxSpeed * MGSCoefficient)
             vel = vel.normalized * (maxSpeed * MGSCoefficient);
 
-        return vel;
+        moveVec = vel;
     }
 
 
     /*
      * -v- Handles forces that oppose Player's movement on the ground */
-    private Vector3 GroundFriction()
+    private void GroundFriction()
     {
         Vector3 counterForce = Vector3.zero;
 
@@ -292,11 +295,11 @@ public class Movement : MonoBehaviour
         if (controller.velocity.z != 0)
             counterForce.z = controller.velocity.z * groundFrictionCoefficient;
 
-        return counterForce;
+        moveVec -= counterForce;
     }
     /*
      * Handles Forces in air that oppose Player's movement through the air */
-    private Vector3 AirDrag()
+    private void AirDrag()
     {
         Vector3 counterForce = Vector3.zero;
 
@@ -307,7 +310,7 @@ public class Movement : MonoBehaviour
             counterForce.z = controller.velocity.z * horizontalDragCoefficient;
         }
 
-        return counterForce;
+        moveVec -= counterForce;
     }
 
 
@@ -315,10 +318,16 @@ public class Movement : MonoBehaviour
      * Handles Jump Forces on player based on if the player is on a wall or on ground */
     private void Jump(bool wallJump)
     {
-        if (wallJump)
-            WallJump();
-        else
+        if (!wallJump)
+        {
             currentVerticalSpeed = jumpForce;
+        }
+        else
+        { 
+            touchingWall = false;
+            moveVec += wallPointHit.normal * (jumpForce * WJCoefficient.x) + (transform.forward * (jumpForce * WJCoefficient.z));
+            currentVerticalSpeed = jumpForce * WJCoefficient.y;
+        }
 
         grounded = false;
     }
@@ -328,111 +337,47 @@ public class Movement : MonoBehaviour
     {
 
         /*
-         * first, set gravity based on wall values
-         * find direction towards wall
-         * check which way the player is facing in relation to wall using Dot Product
-         * using Dot Product, find which way the player will slide along the wall
-         * after finding direction, keep magnitude and apply it to slide direction
-         * apply wall gravity
+         * pain and agony
+         * the description goes here but im just waaaay too tired rn
          */
 
-        //calculate gravity on wall
-        if (currentVerticalSpeed > -gravity * MWGCoefficient)
-            currentVerticalSpeed = controller.velocity.y - (gravity * WGCoefficient);
-        currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
+        if (!touchingWall)
+            return;
 
-        //get the direction towards the wall that was hit
-        Vector3 wallForward = Vector3.Cross(wallPointHit.normal, Vector3.up); //use this to apply forces
-        wallThing = wallForward;
         //store input in relation to where the player is facing
         playerInputDirec = transform.forward * direction.z + transform.right * direction.x;
         playerInputDirec.y = 0;
 
-        //see which way in relation to wall the player inputs towards
-        //the closer the dot is to 0 means more perpendicular
-        //the closer the dot is to -1/1 means either facing same way or opposite way
-        float inputDot = Vector3.Dot(wallForward, playerInputDirec);
+        //take current velocity and transfer to wall plane
+        moveVec = Vector3.ProjectOnPlane(moveVec - (Vector3.up * -moveVec.y), wallPointHit.normal);
 
-        Debug.Log(inputDot + " Input doooooot");
-        //take input dot and smoothly accelerate towards that direction
+        //measure forces and apply to plane
+        Vector3 forces = playerInputDirec * (acceleration * WACoefficient);
+        forces = Vector3.ProjectOnPlane(forces, wallPointHit.normal);
+        forces -= wallPointHit.normal;
 
-        if(inputDot > 0)
-        {
-            //move towards one side
-            moveVec = wallForward.normalized * (moveVec.x + moveVec.z);
-            if(CurrentHorizontalSpeed < maxSpeed * MWSCoefficient)
-                moveVec += moveVec.normalized * WACoefficient;
-            else
-                moveVec = moveVec.normalized * (maxSpeed * MWSCoefficient);
-        }
-        if(inputDot < 0)
-        {
-            //move towards the other
-            moveVec = wallForward.normalized * (moveVec.x + moveVec.z);
-            if (CurrentHorizontalSpeed < maxSpeed * MWSCoefficient)
-                moveVec += moveVec.normalized * WACoefficient;
-            else
-                moveVec = moveVec.normalized * (maxSpeed * MWSCoefficient);
-        }
+        //add to movement vector
+        moveVec += forces;
     }
-    //private Vector3 WallSlide()
-    //{
 
-    //    /*
-    //     * first, set gravity based on wall values
-    //     * find direction towards wall
-    //     * check which way the player is facing in relation to wall using Dot Product
-    //     * using Dot Product, find which way the player will slide along the wall
-    //     * after finding direction, keep magnitude and apply it to slide direction
-    //     * apply wall gravity
-    //     */
-
-    //    //calculate gravity on wall
-    //    if (currentVerticalSpeed > -gravity * MWGCoefficient)
-    //        currentVerticalSpeed = controller.velocity.y - (gravity * WGCoefficient);
-    //    currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
-
-    //    //get the direction towards the wall that was hit
-    //    Vector3 wallDir = (wallPoint - transform.position).normalized;
-    //    //store input in relation to where the player is facing
-    //    playerInputDirec = transform.forward * direction.z + transform.right * direction.x;
-
-    //    //test to see how close to which side one is
-    //    //the closer the dot is to 0 means more perpendicular
-    //    //the closer the dot is to -1/1 means either facing same way or opposite way
-    //    float sideWaysDot = Vector3.Dot(transform.right, wallDir);
-    //    float inputDot = Vector3.Dot(playerInputDirec, wallDir);
-
-    //    Debug.Log(inputDot + " Input doooooot");
-
-    //    //if facing left of wall
-    //    if (sideWaysDot > 0)
-    //    {
-    //        wallDir = Vector3.Cross(wallDir, Vector3.up).normalized;
-
-    //    }
-    //    //if facing right of wall
-    //    if (sideWaysDot < 0)
-    //    {
-    //        wallDir = -Vector3.Cross(wallDir, Vector3.up).normalized;
-
-    //    }
-    //    moveVec = wallDir.normalized * moveVec.magnitude;
-    //    wallDir *= WACoefficient * sideWaysDot;
-    //    vec = wallDir;
-
-    //    return wallDir;
-    //}
-    /*
-     * Handles Jumping off wall */
-    private void WallJump()
+    private void WallFriction()
     {
-        ////get the direction towards the wall that was hit
-        //direc = (wallPoint - transform.position).normalized;
+        //calculate gravity on wall
+        if (currentVerticalSpeed > -gravity * MWGCoefficient)
+            currentVerticalSpeed = controller.velocity.y - (gravity * WGCoefficient);
+        else
+            currentVerticalSpeed -= currentVerticalSpeed * wallFrictionCoefficient;
+        //currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
 
-        ////add direction away from wall
-        //horizontalDir.x = direc.x * -wallJumpForceX; horizontalDir.z = direc.z * -wallJumpForceX;
-        //currentVerticalSpeed = wallJumpForceY;
+        Vector3 counterForce = Vector3.zero;
 
+        if (CurrentHorizontalSpeed > 0)
+        {
+            print("access");
+            counterForce.x = controller.velocity.x * wallFrictionCoefficient;
+            counterForce.z = controller.velocity.z * wallFrictionCoefficient;
+        }
+
+        moveVec -= counterForce;
     }
 }
