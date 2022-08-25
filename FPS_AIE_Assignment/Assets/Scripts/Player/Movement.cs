@@ -7,10 +7,9 @@ using UnityEngine.InputSystem;
 public class Movement : MonoBehaviour
 {
     CharacterController controller;
-    Camera cam;
+    protected Camera cam;
 
     [Header("General Movement Values")]
-    public float maxSpeed = 5f; //used universally in the movement script to decide what the speed is in certain conditions
     [Tooltip("Rate at which Player gains speed.")]
     public float acceleration = 5f;
     [Tooltip("acceleration rate of DownForce the player will experience when in the air.")]
@@ -24,8 +23,6 @@ public class Movement : MonoBehaviour
     [Header("Ground Movement Values")]
     [Tooltip("Ground Acceleration Coefficient: multiplied by 'Acceleration' to get the acceleration of Player when touching the ground.")]
     public float GACoefficient = 1f;
-    [Tooltip("Max Ground Speed Coefficient: multiplied by 'Max Speed' to find what speed the Player is able to reach.")]
-    public float MGSCoefficient = 1f;
     [Tooltip("Coefficient of forces that act against the Player when in motion.")]
     [Range(0, 1)]
     public float groundFrictionCoefficient = 0.1f;
@@ -50,8 +47,6 @@ public class Movement : MonoBehaviour
     [Header("Air Movement Values")]
     [Tooltip("Air Acceleration Coefficient: put desc here.")]
     public float AACoefficient = 5f;
-    [Tooltip("Max Air Speed Coefficient: put desc here.")]
-    public float MASCoefficient = 1f;
     [Tooltip("how much air drag affects the acceleration imposed by gravity.")]
     [Range(0,1)]
     public float verticalDragCoefficient = .25f;
@@ -72,22 +67,19 @@ public class Movement : MonoBehaviour
     private Vector3 moveVec = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
 
-    public float sped;
-
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Built In Engine Functions
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    void Start()
+    public virtual void Start()
     {
         controller = GetComponent<CharacterController>();
         cam = Camera.main;
     }
-    private void Update()
+    public virtual void Update()
     {
         HandleCamera();
-        sped = CurrentHorizontalSpeed;
     }
-    private void FixedUpdate()
+    public virtual void FixedUpdate()
     {
 
         if (controller.collisionFlags != CollisionFlags.Sides)
@@ -119,7 +111,6 @@ public class Movement : MonoBehaviour
             moveVec.y = currentVerticalSpeed;
             controller.Move(moveVec * Time.deltaTime);
         }
-
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -241,10 +232,6 @@ public class Movement : MonoBehaviour
         //apply forces
         vel += forces;
 
-        //clamp to max speed
-        if(vel.magnitude > maxSpeed * MASCoefficient)
-            vel = vel.normalized * (maxSpeed * MASCoefficient);
-
         moveVec = vel;
     }
 
@@ -275,10 +262,6 @@ public class Movement : MonoBehaviour
 
         //apply forces
         vel += forces;
-
-        //clamp to max speed
-        if (vel.magnitude > maxSpeed * MGSCoefficient)
-            vel = vel.normalized * (maxSpeed * MGSCoefficient);
 
         moveVec = vel;
     }
@@ -373,11 +356,10 @@ public class Movement : MonoBehaviour
 
         if (CurrentHorizontalSpeed > 0)
         {
-            print("access");
             counterForce.x = controller.velocity.x * wallFrictionCoefficient;
             counterForce.z = controller.velocity.z * wallFrictionCoefficient;
         }
-
+        
         moveVec -= counterForce;
     }
 }
