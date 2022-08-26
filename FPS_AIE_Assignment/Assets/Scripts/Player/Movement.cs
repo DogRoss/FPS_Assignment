@@ -62,7 +62,7 @@ public class Movement : MonoBehaviour
 
     //Input
     private Vector3 direction = Vector3.zero;
-    private Vector3 mouseVector = Vector3.zero;
+    protected Vector3 mouseVector = Vector3.zero;
     //Applied Input
     private Vector3 moveVec = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
