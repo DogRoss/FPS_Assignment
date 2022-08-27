@@ -7,8 +7,9 @@ public class RangedWeaponData : ScriptableObject
 {
     [Header("Gun Info")]
     [Tooltip("Rounds Per Minute")]
-    public float rateOfFire = 5;
-    public bool canAuto;
+    public float rateOfFire = 300f;
+    public float clipSize = 1f;
+    public bool canAuto = true;
 
     [Header("Bullet Info")]
     public float damagePerBullet = 50f;

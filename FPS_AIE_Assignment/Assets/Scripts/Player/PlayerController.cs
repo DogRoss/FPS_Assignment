@@ -93,6 +93,11 @@ public class PlayerController : Movement
             gun.ToggleShot(false);
             print("release");
     }
+    private void OnSwitchFireMode()
+    {
+        if (gun)
+            gun.ToggleAuto();
+    }
 
     private void Slide()
     {

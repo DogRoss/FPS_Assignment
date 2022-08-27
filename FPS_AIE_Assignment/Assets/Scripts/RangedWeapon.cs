@@ -10,13 +10,31 @@ public class RangedWeapon : MonoBehaviour
     public RangedWeaponData weaponData;
 
     [Header("Line Renderer")]
+    public bool canShoot = true;
+    private bool cActive = false; //coroutineActive
     private bool auto = true;
     private bool lmbHeld = false;
-    private float storedClickTime = 0f;
+    public float storedClickTime = 0f;
     RaycastHit hit;
 
+    private void Start()
+    {
+        if (weaponData.canAuto)
+            auto = true;
+        else
+            auto = false;
+    }
     private void FixedUpdate()
     {
+        if (!canShoot)
+        {
+            if (storedClickTime > weaponData.TimeBetweenBullets)
+            {
+                canShoot = true;
+                storedClickTime = 0f;
+            }
+            storedClickTime += Time.deltaTime;
+        }
 
     }
 
@@ -28,16 +46,22 @@ public class RangedWeapon : MonoBehaviour
 
     public void ToggleAuto()
     {
+        if (weaponData.canAuto)
+            auto = !auto;
+        else
+            auto = false;
 
+        print("auto toggle: " + auto);
     }
     public void ToggleShot(bool firing)
     {
-        if (firing)
+        if (firing && canShoot)
         {
+            print("made it");
             lmbHeld = true;
             if (!auto)
                 Shoot();
-            else
+            else if(!cActive)
                 StartCoroutine(AutoShoot());
         }
         else
@@ -46,6 +70,7 @@ public class RangedWeapon : MonoBehaviour
 
     private void Shoot()
     {
+
         print("SHOT DA BULLE");
         bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletTravelUPS);
 
@@ -60,12 +85,16 @@ public class RangedWeapon : MonoBehaviour
             rend.SetPosition(1, muzzle.position + (muzzle.forward * weaponData.bulletTravelUPS));
         }
 
+        canShoot = false;
+
         StartCoroutine(FadeTrail(rend));
     }
 
     private IEnumerator AutoShoot()
     {
-        while (lmbHeld)
+        cActive = true;
+
+        while (lmbHeld && auto)
         {
             bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletTravelUPS);
 
@@ -84,6 +113,9 @@ public class RangedWeapon : MonoBehaviour
 
             yield return new WaitForSeconds(weaponData.TimeBetweenBullets);
         }
+
+        canShoot = false;
+        cActive = false;
     }
 
     private IEnumerator FadeTrail(LineRenderer rend)

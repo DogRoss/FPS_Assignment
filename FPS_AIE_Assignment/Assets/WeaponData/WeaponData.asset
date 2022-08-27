@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: WeaponData
   m_EditorClassIdentifier: 
   rateOfFire: 600
+  clipSize: 1
   canAuto: 1
   damagePerBullet: 50
   bulletTravelUPS: 200
