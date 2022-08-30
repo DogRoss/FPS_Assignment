@@ -14,27 +14,20 @@ public class PlayerController : Movement
     public RangedWeapon gun;
     public Transform gunHolder;
 
-    public float gunControlForce = 1f; //amount of force used to control the gun
-    public float aimCoefficient = 2f;
+    //public float gunControlForce = 1f; //amount of force used to control the gun
+    //public float aimCoefficient = 2f;
+    public Vector3 aimingForces;
+    public float aimingForce;
+    public float maxGunDist = 2f;
 
-    public float gunWallDist = 0f;
-    public float maxGunDisplacement;
-
+    [Header("Gun & Wall Collision")]
     public LayerMask gunCollisionMask;
-
-
-
-    public float slideForce;
-    public float length;
-    public float progress;
+    public float gunWallCheckDist = 2f;
 
     //camera rays
     Ray ray;
-    Ray gRay;
     RaycastHit hitData;
-    RaycastHit gHitData;
     bool hit = false;
-    bool gHit = false;
 
     public override void Start()
     {
@@ -44,42 +37,16 @@ public class PlayerController : Movement
     {
         base.Update();
 
-        gun.transform.forward = ray.direction;
-
-        //if (hit)
-        //{
-        //    Slide();
-
-        //    //find direction to hit point
-        //    Vector3 dir = (hitData.point - gun.transform.position).normalized;
-        //    gun.transform.forward += dir * Time.deltaTime * 40;
-        //}
-        //else
-
+        
     }
     public override void FixedUpdate()
     {
         base.FixedUpdate();
-
-        //store distance from gun muzzle
-        gRay.origin = gun.muzzle.position; gRay.direction = gun.muzzle.forward;
-        gHit = Physics.SphereCast(gRay, .1f, out gHitData, .1f, gunCollisionMask.value);
-        if(gHit)
-        {
-            print("hit: " + gHitData.collider.name);
-            gunWallDist = gHitData.distance;
-        }
-        else
-        {
-            gunWallDist = 999f;
-        }
-
-        Slide();
-
-        //raycast forward from player
         hit = false;
         ray.origin = cam.transform.position; ray.direction = cam.transform.forward;
-        hit = Physics.Raycast(ray, out hitData, gunCollisionMask.value);
+        hit = Physics.Raycast(ray, out hitData, gunWallCheckDist, gunCollisionMask.value);
+
+        MoveGunToHold();
     }
 
     private void OnLMouseDown(InputValue value)
@@ -98,23 +65,45 @@ public class PlayerController : Movement
         if (gun)
             gun.ToggleAuto();
     }
-
-    private void Slide()
+    private void MoveGunToHold()
     {
-        if(gunWallDist < 0.1f)
+        ////check distance from wall, and compare to wallcheckdistance
+        //if (!hit)
+        //    gun.transform.position = gunHolder.position;
+        //else
+        //{
+        //    float difference = gunWallCheckDist - Vector3.Distance(hitData.point, ray.origin);
+        //    gun.transform.position = gunHolder.position + (-transform.forward * difference);
+        //}
+        //gun.transform.forward = ray.direction;
+
+        //store distance
+        float distance = Vector3.Distance(gunHolder.position, gun.transform.position);
+        //store direction
+        Vector3 dir = (gunHolder.position - gun.transform.position).normalized;
+        aimingForces = dir * aimingForce; //apply force towards object
+
+        //if more than max distance, set within max distance
+        if(distance > maxGunDist)
         {
-            Debug.Log("account for wall");
-
-            progress += Time.deltaTime;
+            gun.transform.position = gunHolder.position + (-dir * maxGunDist);
         }
-        else
-        {
-            progress -= Time.deltaTime;
-        }
-        progress = Mathf.Clamp01(progress);
 
- 
+        //the closer we get, the smoother the gun movement to position it should be
+        //float percentage = 
 
-        gun.transform.position = gunHolder.position + (-transform.forward * (length * progress));
+        gun.transform.position += aimingForces * Time.deltaTime;
+
+        print("end of function");
+
+        //find direction towards hold point
+    }
+    private void EquipWeapon(int slot)
+    {
+        //TODO: create functionality, later planned
+    }
+    private void ApplyRecoil(float recoilX, float recoilY, float recoilZ)
+    {
+        //apply recoil here
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class RangedWeapon : MonoBehaviour
 {
@@ -10,12 +11,15 @@ public class RangedWeapon : MonoBehaviour
     public RangedWeaponData weaponData;
 
     [Header("Line Renderer")]
-    public bool canShoot = true;
+    private bool canShoot = true;
     private bool cActive = false; //coroutineActive
     private bool auto = true;
     private bool lmbHeld = false;
-    public float storedClickTime = 0f;
+    private float storedClickTime = 0f;
     RaycastHit hit;
+
+    [HideInInspector]
+    public UnityEvent<float, float, float> playerRecoilEvent; //used by player to apply recoil to player variables
 
     private void Start()
     {
@@ -23,6 +27,8 @@ public class RangedWeapon : MonoBehaviour
             auto = true;
         else
             auto = false;
+
+        playerRecoilEvent.RemoveAllListeners();
     }
     private void FixedUpdate()
     {
@@ -35,7 +41,6 @@ public class RangedWeapon : MonoBehaviour
             }
             storedClickTime += Time.deltaTime;
         }
-
     }
 
     private void OnDrawGizmos()
@@ -44,6 +49,16 @@ public class RangedWeapon : MonoBehaviour
         Gizmos.DrawSphere(hit.point, .05f);
     }
 
+    public void AddRecoilListener(UnityAction<float, float, float> action)
+    {
+        playerRecoilEvent.AddListener(action);
+    }
+    public void HandleDequip()
+    {
+        //handle dequiping here
+        //take all attatched recoil events and remove
+        playerRecoilEvent.RemoveAllListeners();
+    }
     public void ToggleAuto()
     {
         if (weaponData.canAuto)
@@ -132,5 +147,23 @@ public class RangedWeapon : MonoBehaviour
         }
 
         Destroy(rend.gameObject);
+    }
+
+    private void CalculateRecoil()
+    {
+        float xRecoil = 0, yRecoil = 0, zRecoil = 0;
+        float xPlayer = 0, yPlayer = 0, zPlayer = 0;
+
+        //TODO: calculate recoil forces based off certain values
+        float tempRecoilForce = 200f;
+        xRecoil = Random.Range(-tempRecoilForce, tempRecoilForce);
+        yRecoil = Random.Range(-tempRecoilForce, tempRecoilForce);
+        zRecoil = Random.Range(-tempRecoilForce / 2, 0);
+
+        //apply gun recoil forces
+
+
+        //apply player rotational forces
+        playerRecoilEvent.Invoke(xPlayer, yPlayer, zPlayer);
     }
 }

@@ -86,6 +86,7 @@ public class Movement : MonoBehaviour
             touchingWall = false;
 
         //apply forces to controller
+
         if (grounded)
         {
             GroundMovement();
