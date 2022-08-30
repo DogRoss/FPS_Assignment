@@ -16,9 +16,10 @@ public class PlayerController : Movement
 
     //public float gunControlForce = 1f; //amount of force used to control the gun
     //public float aimCoefficient = 2f;
-    public Vector3 aimingForces;
-    public float aimingForce;
-    public float maxGunDist = 2f;
+    public float gunPositionalForce = 5f;
+    public float gunPointingForce = 1f;
+    public float gunTargetMaxDist = 2f;
+    public float gunMaxDistY = 2f;
 
     [Header("Gun & Wall Collision")]
     public LayerMask gunCollisionMask;
@@ -67,35 +68,25 @@ public class PlayerController : Movement
     }
     private void MoveGunToHold()
     {
-        ////check distance from wall, and compare to wallcheckdistance
-        //if (!hit)
-        //    gun.transform.position = gunHolder.position;
-        //else
-        //{
-        //    float difference = gunWallCheckDist - Vector3.Distance(hitData.point, ray.origin);
-        //    gun.transform.position = gunHolder.position + (-transform.forward * difference);
-        //}
-        //gun.transform.forward = ray.direction;
-
         //store distance
         float distance = Vector3.Distance(gunHolder.position, gun.transform.position);
         //store direction
         Vector3 dir = (gunHolder.position - gun.transform.position).normalized;
-        aimingForces = dir * aimingForce; //apply force towards object
-
-        //if more than max distance, set within max distance
-        if(distance > maxGunDist)
-        {
-            gun.transform.position = gunHolder.position + (-dir * maxGunDist);
-        }
-
-        //the closer we get, the smoother the gun movement to position it should be
-        //float percentage = 
-
-        gun.transform.position += aimingForces * Time.deltaTime;
-
-        print("end of function");
-
+        //find current aiming power ()
+        float curPower = distance / gunTargetMaxDist;
+        //apply to gun position
+        Vector3 pos = gun.transform.position + dir * (gunPositionalForce * curPower) * Time.deltaTime;
+        pos.y = Mathf.Clamp(pos.y, gunHolder.transform.position.y - gunMaxDistY, gunHolder.transform.position.y + gunMaxDistY);
+        gun.transform.position = pos;
+        /*
+         * find dot product to see how close to direction gun is facing
+         * add to dot with rotational force * deltaTime
+         */
+        float dot = Vector3.Dot(gun.transform.forward, ray.direction);
+        float afterProd = gunPointingForce * Time.deltaTime / dot;
+        //dot = Mathf.Clamp01(dot);
+        //afterProd -= dot;
+        gun.transform.forward = Vector3.RotateTowards(gun.transform.forward, ray.direction, afterProd, Mathf.Infinity);
         //find direction towards hold point
     }
     private void EquipWeapon(int slot)

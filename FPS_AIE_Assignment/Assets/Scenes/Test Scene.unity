@@ -630,9 +630,9 @@ MonoBehaviour:
   horizontalDragCoefficient: 0.01
   gun: {fileID: 1281494443}
   gunHolder: {fileID: 1720742913}
-  aimingForces: {x: 0, y: 0, z: 0}
-  aimingForce: 0
-  maxGunDist: 0.2
+  gunPositionalForce: 20
+  gunPointingForce: 1.5
+  gunTargetMaxDist: 0.5
   gunCollisionMask:
     serializedVersion: 2
     m_Bits: 192
@@ -1174,7 +1174,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1529710500
 Transform:
   m_ObjectHideFlags: 0
@@ -2214,15 +2214,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3423696424655095642, guid: 03cee2f8fc2ec2a44a5ba9c1577e4b51, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.127
+      value: 0.104
       objectReference: {fileID: 0}
     - target: {fileID: 3423696424655095642, guid: 03cee2f8fc2ec2a44a5ba9c1577e4b51, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.3799999
+      value: 2.271
       objectReference: {fileID: 0}
     - target: {fileID: 3423696424655095642, guid: 03cee2f8fc2ec2a44a5ba9c1577e4b51, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.328
+      value: 0.10900003
       objectReference: {fileID: 0}
     - target: {fileID: 3423696424655095642, guid: 03cee2f8fc2ec2a44a5ba9c1577e4b51, type: 3}
       propertyPath: m_LocalRotation.w
