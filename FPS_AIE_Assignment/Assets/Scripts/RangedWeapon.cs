@@ -45,8 +45,8 @@ public class RangedWeapon : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawSphere(muzzle.position, .05f);
-        Gizmos.DrawSphere(hit.point, .05f);
+        //Gizmos.DrawSphere(muzzle.position, .05f);
+        //Gizmos.DrawSphere(hit.point, .05f);
     }
 
     public void AddRecoilListener(UnityAction<float, float, float> action)
