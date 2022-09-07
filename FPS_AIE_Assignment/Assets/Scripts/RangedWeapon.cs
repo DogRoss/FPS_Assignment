@@ -28,7 +28,7 @@ public class RangedWeapon : MonoBehaviour
         else
             auto = false;
 
-        playerRecoilEvent.RemoveAllListeners();
+        //playerRecoilEvent.RemoveAllListeners();
     }
     private void FixedUpdate()
     {
@@ -51,7 +51,10 @@ public class RangedWeapon : MonoBehaviour
 
     public void AddRecoilListener(UnityAction<float, float, float> action)
     {
+        print("action added");
         playerRecoilEvent.AddListener(action);
+
+        print(playerRecoilEvent.GetPersistentEventCount());
     }
     public void HandleDequip()
     {
@@ -72,7 +75,6 @@ public class RangedWeapon : MonoBehaviour
     {
         if (firing && canShoot)
         {
-            print("made it");
             lmbHeld = true;
             if (!auto)
                 Shoot();
@@ -102,6 +104,7 @@ public class RangedWeapon : MonoBehaviour
 
         canShoot = false;
 
+        playerRecoilEvent.Invoke(1, 1, 1);
         StartCoroutine(FadeTrail(rend));
     }
 

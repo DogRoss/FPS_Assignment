@@ -40,6 +40,8 @@ public class PlayerController : Movement
     public override void Start()
     {
         base.Start();
+
+        
     }
     public override void Update()
     {

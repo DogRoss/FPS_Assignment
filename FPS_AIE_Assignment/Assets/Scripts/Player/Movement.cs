@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
-    CharacterController controller;
+    protected CharacterController controller;
     protected Camera cam;
 
     [Header("General Movement Values")]
@@ -54,6 +54,9 @@ public class Movement : MonoBehaviour
     [Range(0, 1)]
     public float horizontalDragCoefficient = .25f;
 
+    [Header("Camera Values")]
+    public float sensitivity = 0.5f;
+    public float maxLookAngle;
 
     //Raycast/Ground Check
     private bool grounded;
@@ -66,6 +69,9 @@ public class Movement : MonoBehaviour
     //Applied Input
     private Vector3 moveVec = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
+
+    //Temp variables
+    //TODO: redo varaibles  or delete
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Built In Engine Functions
@@ -200,11 +206,11 @@ public class Movement : MonoBehaviour
     {
         Vector3 axis = mouseVector;
         axis.y = 0;
-        cam.transform.Rotate(axis, 1);
+        cam.transform.Rotate(axis, Mathf.Abs(mouseVector.x) * sensitivity);
 
         axis.y = mouseVector.y;
         axis.x = 0;
-        transform.Rotate(axis, 1);
+        transform.Rotate(axis, Mathf.Abs(mouseVector.y) * sensitivity);
     }
 
     /*
