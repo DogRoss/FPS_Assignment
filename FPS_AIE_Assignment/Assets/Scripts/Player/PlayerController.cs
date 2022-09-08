@@ -10,153 +10,121 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : Movement
 {
-    [Header("Spacer")]
+    [Header("Gun Variables")]
     public RangedWeapon gun;
     public Transform hipfirePos;
-    public Transform aimingPos;
+    public Transform adsPos;
 
-    //public float gunControlForce = 1f; //amount of force used to control the gun
-    //public float aimCoefficient = 2f;
-    public float aimingPositionalForce = 2f;
-    public float aimingPointingForce = 2f;
-    public float gunPositionalForce = 5f;
-    public float gunPointingForce = 1f;
-    public float gunTargetMaxDist = 1f;
-    public float horizontalMaxDist = 2f;
-    public float verticalMaxDist = 2f;
-    
+    //aiming variables
+    [Header("Aiming/Recoil Variables")]
+    public float recoilRecoveryForce;
+    public float gunTolerance = 10f;
+    public float maxGunDistance = .25f;
+    public float maxGunAngle = 10f;
+    public float gunTurnForce = 10f;
+
+    private Vector3 currentRecoil = Vector3.zero;
+    private Vector3 currentRotation = Vector3.zero;
 
     [Header("Gun & Wall Collision")]
     public LayerMask gunCollisionMask;
     public float gunWallCheckDist = 2f;
 
-    private bool aimDownSights = false;
-
     //camera rays
     Ray ray;
     RaycastHit hitData;
     bool hit = false;
-
+     
     public override void Start()
     {
         base.Start();
 
-        
     }
     public override void Update()
     {
         base.Update();
-
-        if (!aimDownSights)
-            AimGunToHip();
-        else
-            AimGunToADS();
     }
     public override void FixedUpdate()
     {
         base.FixedUpdate();
+
         hit = false;
         ray.origin = cam.transform.position; ray.direction = cam.transform.forward;
         hit = Physics.Raycast(ray, out hitData, gunWallCheckDist, gunCollisionMask.value);
 
-        if (!aimDownSights)
-            MoveGunToHip();
-        else
-            MoveGunToADS();
-        
+        CalculateWeaponPosition();
+        RecoverRecoil();
     }
 
+    //--------------------------------------------------------------------------------------------------------------------------
+    // Input Functions
+    //--------------------------------------------------------------------------------------------------------------------------
     private void OnLMouseDown(InputValue value)
     {
-        print("call");
-
         if (value.Get<float>() > 0)
             gun.ToggleShot(true);
-            print("held");
         if (value.Get<float>() <= 0)
             gun.ToggleShot(false);
-            print("release");
     }
     private void OnRMouseDown(InputValue value)
     {
-        if(value.Get<float>() > 0)
-            aimDownSights = true;
-        else
-            aimDownSights = false;
-
-        print("call RMB");
+        if (value.Get<float>() > 0)
+            print("call aim");
     }
     private void OnSwitchFireMode()
     {
-        if (gun)
-            gun.ToggleAuto();
+        //if (gun)
+        //    gun.ToggleAuto();
+
+        if (gun != null)
+        {
+            gun.playerRecoilEvent.AddListener(AddRecoil);
+            print("listener amount: " + gun.playerRecoilEvent);
+        }
     }
-    private void MoveGunToADS()
+
+    //--------------------------------------------------------------------------------------------------------------------------
+    // User Functions
+    //--------------------------------------------------------------------------------------------------------------------------
+    private void AddRecoil(float x, float y, float z)
     {
-        //CALLED IN FIXED
+        print("bro what");
 
-        //store distance
-        float distance = Vector3.Distance(aimingPos.position, gun.transform.position + gun.weaponData.aimPositionalOffset);
-        //store direction
-        Vector3 dir = (aimingPos.position - (gun.transform.position + gun.weaponData.aimPositionalOffset)).normalized;
-        //find current aiming power ()
-        float curPower = distance / gunTargetMaxDist;
-        //apply to gun position
-        gun.transform.position += dir * (aimingPositionalForce * curPower) * Time.fixedDeltaTime;
-
-        //clamp gun
-        Vector3 pos = gun.transform.position;
-        pos.y = Mathf.Clamp(pos.y, aimingPos.transform.position.y - verticalMaxDist, aimingPos.transform.position.y + verticalMaxDist);
-        pos.x = Mathf.Clamp(pos.x, aimingPos.transform.position.x - horizontalMaxDist, aimingPos.transform.position.x + horizontalMaxDist);
-        pos.z = Mathf.Clamp(pos.z, aimingPos.transform.position.z - horizontalMaxDist, aimingPos.transform.position.z + horizontalMaxDist);
-        gun.transform.position = pos;
+        currentRecoil.x += x;
+        currentRecoil.y += y;
+        currentRecoil.z += z;
     }
-    private void MoveGunToHip()
+    private void RecoverRecoil()
     {
-        //CALLED IN FIXED
+        float xMulti = 0, yMulti = 0, zMulti = 0;
 
-        //store distance
-        float distance = Vector3.Distance(hipfirePos.position, gun.transform.position + gun.weaponData.hipPositionalOffset);
-        //store direction
-        Vector3 dir = (hipfirePos.position - (gun.transform.position + gun.weaponData.hipPositionalOffset)).normalized;
-        //find current aiming power ()
-        float curPower = distance / gunTargetMaxDist;
-        //apply forces to gun
-        gun.transform.position += dir * (gunPositionalForce * curPower) * Time.fixedDeltaTime;
+        if(Mathf.Abs(currentRecoil.x) > 0)
+            xMulti = Mathf.Clamp(currentRecoil.x / recoilRecoveryForce, -1, 1);
+        if (Mathf.Abs(currentRecoil.y) > 0)
+            yMulti = Mathf.Clamp(currentRecoil.y / recoilRecoveryForce, -1, 1);
+        if (Mathf.Abs(currentRecoil.z) > 0)
+            zMulti = Mathf.Clamp(currentRecoil.z / recoilRecoveryForce, -1, 1);
 
-        //clamp gun within certain bounds
-        Vector3 pos = Vector3.zero;
-        pos = gun.transform.position;
-        pos.y = Mathf.Clamp(pos.y, hipfirePos.transform.position.y - verticalMaxDist, hipfirePos.transform.position.y + verticalMaxDist);
-        pos.x = Mathf.Clamp(pos.x, hipfirePos.transform.position.x - horizontalMaxDist, hipfirePos.transform.position.x + horizontalMaxDist);
-        pos.z = Mathf.Clamp(pos.z, hipfirePos.transform.position.z - horizontalMaxDist, hipfirePos.transform.position.z + horizontalMaxDist);
-        gun.transform.position = pos;
+        currentRecoil.x -= xMulti * recoilRecoveryForce;
+        currentRecoil.y -= yMulti * recoilRecoveryForce;
+        currentRecoil.z -= zMulti * recoilRecoveryForce;
     }
-    private void AimGunToADS()
+    private void CalculateWeaponPosition()
     {
-        //CALLED IN NORMAL
+        //take current movement speed, and store opposite of velocity direction
+        Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
+        //amount of lagbehind the gun will experience
+        float amount = Mathf.Clamp(controller.velocity.magnitude / gunTolerance, 0, maxGunDistance);
 
-        /* find dot product to see how close to direction gun is facing
-         * add to dot with rotational force * deltaTime
-         */
-        float dot = Vector3.Dot(gun.transform.forward, ray.direction);
-        float afterProd = aimingPointingForce * Time.deltaTime / dot;
+        gun.transform.localPosition = hipfirePos.localPosition + (velDirection * amount) + currentRecoil;
 
-        gun.transform.forward = Vector3.RotateTowards(gun.transform.forward, ray.direction, .1f * Time.deltaTime, Mathf.Infinity);
-    }
-    private void AimGunToHip()
-    {
-        //CALLED IN NORMAL
+        currentRotation.x += Mathf.Clamp(mouseVector.x * Time.deltaTime * gunTurnForce, -maxGunAngle, maxGunAngle);
+        currentRotation.y += Mathf.Clamp(mouseVector.y * Time.deltaTime * gunTurnForce, -maxGunAngle, maxGunAngle);
 
-        /*
-         * find dot product to see how close to direction gun is facing
-         * add to dot with rotational force * deltaTime
-         */
-        float dot = Vector3.Dot(gun.transform.forward, ray.direction);
-        float afterProd = gunPointingForce * Time.deltaTime / dot;
-        //dot = Mathf.Clamp01(dot);
-        //afterProd -= dot;
-        gun.transform.forward = Vector3.RotateTowards(gun.transform.forward, ray.direction, .1f * Time.deltaTime, Mathf.Infinity);
+        currentRotation.x -= currentRotation.x * Time.deltaTime * gunTurnForce;
+        currentRotation.y -= currentRotation.y * Time.deltaTime * gunTurnForce;
+
+        gun.transform.localRotation = Quaternion.Euler(currentRotation);
     }
     private void EquipWeapon(int slot)
     {

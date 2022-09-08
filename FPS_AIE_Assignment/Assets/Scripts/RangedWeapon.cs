@@ -18,8 +18,8 @@ public class RangedWeapon : MonoBehaviour
     private float storedClickTime = 0f;
     RaycastHit hit;
 
-    [HideInInspector]
-    public UnityEvent<float, float, float> playerRecoilEvent; //used by player to apply recoil to player variables
+    delegate void RecoilEvent(float xPosForce, float yPosForce, float zPosForce);
+    public RecoilEvent recoil
 
     private void Start()
     {
