@@ -359,16 +359,19 @@ MonoBehaviour:
   AACoefficient: 0.08
   verticalDragCoefficient: 0.03
   horizontalDragCoefficient: 0.01
-  sensitivity: 0.2
-  maxLookAngle: 90
+  sensitivity: 0.5
+  maxLookAngle: 0
   gun: {fileID: 1281494443}
   hipfirePos: {fileID: 625873076}
-  adsPos: {fileID: 2055220235}
-  recoilRecoveryForce: 10
-  gunTolerance: 100
+  adsPos: {fileID: 0}
+  tempRecoil: 7
   maxGunDistance: 0.25
-  maxGunAngle: 3
-  gunTurnForce: 3
+  gunTolerance: 200
+  recoilReturnPositionSpeed: 10
+  recoilReturnPositionSnappiness: 10
+  maxGunAngle: 20
+  recoilReturnRotationSpeed: 5
+  recoilReturnRotationSnappiness: 10
   gunCollisionMask:
     serializedVersion: 2
     m_Bits: 0

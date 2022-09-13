@@ -20,6 +20,8 @@ public class RangedWeaponData : ScriptableObject
     [Header("Gun Handling")]
     public Vector3 hipPositionalOffset = Vector3.zero;
     public Vector3 aimPositionalOffset = Vector3.zero;
+    public float turnForce = 10f;
+
     public float RoundsPerSecond
     {
         get

@@ -14,17 +14,28 @@ public class PlayerController : Movement
     public RangedWeapon gun;
     public Transform hipfirePos;
     public Transform adsPos;
+    public float tempRecoil = 10f;
 
     //aiming variables
-    [Header("Aiming/Recoil Variables")]
-    public float recoilRecoveryForce;
-    public float gunTolerance = 10f;
+    [Header("Recoil Position Variables")]
+    //Position
     public float maxGunDistance = .25f;
-    public float maxGunAngle = 10f;
-    public float gunTurnForce = 10f;
+    public float gunTolerance = 10f;
+    public float recoilReturnPositionSpeed = 10f;
+    public float recoilReturnPositionSnappiness = 10f;
 
-    private Vector3 currentRecoil = Vector3.zero;
-    private Vector3 currentRotation = Vector3.zero;
+    private Vector3 targetRecoilPosition = Vector3.zero;
+    private Vector3 currentRecoilPosition = Vector3.zero;
+    private Vector3 recoilVelocity = Vector3.zero;
+
+    [Header("Recoil Rotation Variables")]
+    //Rotation
+    public float maxGunAngle = 10f;
+    public float recoilReturnRotationSpeed = 5f;
+    public float recoilReturnRotationSnappiness = 10f;
+
+    private Vector3 currentRecoilRotation = Vector3.zero;
+    private Vector3 targetRecoilRotation = Vector3.zero;
 
     [Header("Gun & Wall Collision")]
     public LayerMask gunCollisionMask;
@@ -39,10 +50,15 @@ public class PlayerController : Movement
     {
         base.Start();
 
+        gun.recoilEvent += AddRecoil;
+        gun.recoilEvent.Invoke(0, 0, 0);
     }
     public override void Update()
     {
         base.Update();
+
+        CalculateWeaponPosition();
+        ApplyRecoil();
     }
     public override void FixedUpdate()
     {
@@ -51,9 +67,6 @@ public class PlayerController : Movement
         hit = false;
         ray.origin = cam.transform.position; ray.direction = cam.transform.forward;
         hit = Physics.Raycast(ray, out hitData, gunWallCheckDist, gunCollisionMask.value);
-
-        CalculateWeaponPosition();
-        RecoverRecoil();
     }
 
     //--------------------------------------------------------------------------------------------------------------------------
@@ -73,41 +86,29 @@ public class PlayerController : Movement
     }
     private void OnSwitchFireMode()
     {
-        //if (gun)
-        //    gun.ToggleAuto();
-
-        if (gun != null)
-        {
-            gun.playerRecoilEvent.AddListener(AddRecoil);
-            print("listener amount: " + gun.playerRecoilEvent);
-        }
+        if (gun)
+            gun.ToggleAuto();
     }
 
     //--------------------------------------------------------------------------------------------------------------------------
     // User Functions
     //--------------------------------------------------------------------------------------------------------------------------
+    private void ApplyRecoil()
+    {
+        currentRecoilPosition += recoilVelocity * Time.fixedDeltaTime;
+        currentRecoilPosition = Vector3.ClampMagnitude(currentRecoilPosition, maxGunDistance);
+        recoilVelocity = Vector3.Lerp(recoilVelocity, Vector3.zero, recoilReturnPositionSpeed * Time.fixedDeltaTime);
+    }
     private void AddRecoil(float x, float y, float z)
     {
-        print("bro what");
+        //recoilVelocity.x += x;
+        //recoilVelocity.y += y;
+        //recoilVelocity.z += z;
 
-        currentRecoil.x += x;
-        currentRecoil.y += y;
-        currentRecoil.z += z;
-    }
-    private void RecoverRecoil()
-    {
-        float xMulti = 0, yMulti = 0, zMulti = 0;
+        //temp recoil method
+        //targetRotation += new Vector3(tempRecoil, Random.Range(-tempRecoil, tempRecoil), Random.Range(-tempRecoil, tempRecoil));
+        targetRecoilRotation += new Vector3(-tempRecoil, Random.Range(-tempRecoil, tempRecoil), 0);
 
-        if(Mathf.Abs(currentRecoil.x) > 0)
-            xMulti = Mathf.Clamp(currentRecoil.x / recoilRecoveryForce, -1, 1);
-        if (Mathf.Abs(currentRecoil.y) > 0)
-            yMulti = Mathf.Clamp(currentRecoil.y / recoilRecoveryForce, -1, 1);
-        if (Mathf.Abs(currentRecoil.z) > 0)
-            zMulti = Mathf.Clamp(currentRecoil.z / recoilRecoveryForce, -1, 1);
-
-        currentRecoil.x -= xMulti * recoilRecoveryForce;
-        currentRecoil.y -= yMulti * recoilRecoveryForce;
-        currentRecoil.z -= zMulti * recoilRecoveryForce;
     }
     private void CalculateWeaponPosition()
     {
@@ -116,22 +117,33 @@ public class PlayerController : Movement
         //amount of lagbehind the gun will experience
         float amount = Mathf.Clamp(controller.velocity.magnitude / gunTolerance, 0, maxGunDistance);
 
-        gun.transform.localPosition = hipfirePos.localPosition + (velDirection * amount) + currentRecoil;
+        //recover recoil position
+        //currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, Vector3.zero, recoilReturnSpeed * Time.fixedDeltaTime);
+        //targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, recoilReturnPositionSpeed * Time.fixedDeltaTime);
+        //currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition, recoilReturnPositionSnappiness * Time.deltaTime);
+        //
+        //gun.transform.localPosition = hipfirePos.localPosition + (velDirection * amount) + currentRecoilPosition;
 
-        currentRotation.x += Mathf.Clamp(mouseVector.x * Time.deltaTime * gunTurnForce, -maxGunAngle, maxGunAngle);
-        currentRotation.y += Mathf.Clamp(mouseVector.y * Time.deltaTime * gunTurnForce, -maxGunAngle, maxGunAngle);
 
-        currentRotation.x -= currentRotation.x * Time.deltaTime * gunTurnForce;
-        currentRotation.y -= currentRotation.y * Time.deltaTime * gunTurnForce;
+        targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, recoilReturnPositionSpeed * Time.fixedDeltaTime);
+        currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition, recoilReturnPositionSnappiness * Time.deltaTime);
 
-        gun.transform.localRotation = Quaternion.Euler(currentRotation);
+        gun.transform.localPosition = hipfirePos.localPosition + (velDirection * amount) + currentRecoilPosition;
+
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
+        // Rotational Recoil
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
+        targetRecoilRotation = Vector3.Lerp(targetRecoilRotation, Vector3.zero, recoilReturnRotationSpeed * Time.fixedDeltaTime);
+        //account gun rotation for mouse movement
+        targetRecoilRotation += mouseVector * gun.weaponData.turnForce * Time.fixedDeltaTime;
+        currentRecoilRotation = Vector3.Slerp(currentRecoilRotation, targetRecoilRotation, recoilReturnRotationSnappiness * Time.fixedDeltaTime);
+        //clamp rotation to max values
+        currentRecoilRotation = Vector3.ClampMagnitude(currentRecoilRotation, maxGunAngle);
+        gun.transform.localRotation = Quaternion.Euler(currentRecoilRotation);
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
     }
     private void EquipWeapon(int slot)
     {
         //TODO: create functionality, later planned
-    }
-    private void ApplyPlayerRecoil(float recoilX, float recoilY, float recoilZ)
-    {
-        //apply recoil here
     }
 }
