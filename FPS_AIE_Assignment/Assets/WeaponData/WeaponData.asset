@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17109e4645edbcb41bcc80fd05bbfe73, type: 3}
   m_Name: WeaponData
   m_EditorClassIdentifier: 
-  rateOfFire: 600
+  rateOfFire: 1250
   clipSize: 1
   canAuto: 1
   damagePerBullet: 50
   bulletTravelUPS: 200
   bulletsPerShot: 1
+  bulletRecoilForce: 2.0467
+  BRFAngularCoefficient: 5
   hipPositionalOffset: {x: 0, y: 0, z: 0}
   aimPositionalOffset: {x: 0, y: -0.07, z: 0}
   trail: {fileID: 2679031306013335293, guid: fb00cb92d949d8a48905bea650a6a1a0, type: 3}

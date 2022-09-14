@@ -364,14 +364,13 @@ MonoBehaviour:
   gun: {fileID: 1281494443}
   hipfirePos: {fileID: 625873076}
   adsPos: {fileID: 0}
-  tempRecoil: 7
-  maxGunDistance: 0.25
-  gunTolerance: 200
-  recoilReturnPositionSpeed: 10
-  recoilReturnPositionSnappiness: 10
-  maxGunAngle: 20
-  recoilReturnRotationSpeed: 5
-  recoilReturnRotationSnappiness: 10
+  ads: 0
+  turnForce: 4
+  gunDistanceTolerance: 350
+  aimingPositionForce: 20
+  aimingRotationForce: 20
+  ADSForceCoefficient: 20
+  aimingSnappiness: 10
   gunCollisionMask:
     serializedVersion: 2
     m_Bits: 0

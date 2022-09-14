@@ -13,14 +13,17 @@ public class RangedWeaponData : ScriptableObject
 
     [Header("Bullet Data")]
     public float damagePerBullet = 50f;
-    [Tooltip("UPS = Units Per Second: how many in game units the bullet will travel per second")]
+    [Tooltip("UPS = Units Per Second: how many in game units the bullet will travel per second, Unit = meters")]
     public float bulletTravelUPS = 200f; //set bulletSpeed will also be first inital raycast to point before drop is applied
     public float bulletsPerShot = 1f; //how many bullets are shot when the Shoot() function is used
+    [Tooltip("Measured in Newton-Meters: 'Gun Recoil Energy' from shooting a bullet")]
+    public float bulletRecoilForce = 1;
+    [Tooltip("BRF = Bullet Recoil Force: how much of regular recoil gets carried over to angular recoil")]
+    public float BRFAngularCoefficient = 1;
 
     [Header("Gun Handling")]
     public Vector3 hipPositionalOffset = Vector3.zero;
     public Vector3 aimPositionalOffset = Vector3.zero;
-    public float turnForce = 10f;
 
     public float RoundsPerSecond
     {

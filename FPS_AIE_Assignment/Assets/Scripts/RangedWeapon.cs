@@ -18,7 +18,7 @@ public class RangedWeapon : MonoBehaviour
     private float storedClickTime = 0f;
     RaycastHit hit;
 
-    public delegate void RecoilEvent(float xPosForce, float yPosForce, float zPosForce);
+    public delegate void RecoilEvent(float force);
     public RecoilEvent recoilEvent;
 
     private void Start()
@@ -127,18 +127,7 @@ public class RangedWeapon : MonoBehaviour
 
     private void CalculateRecoil()
     {
-        float xRecoil = 0, yRecoil = 0, zRecoil = 0;
-
-        //TODO: calculate recoil forces based off certain values
-        float tempRecoilForce = 10f;
-        xRecoil = Random.Range(-tempRecoilForce, tempRecoilForce);
-        yRecoil = Random.Range(0, tempRecoilForce);
-        zRecoil = Random.Range(-tempRecoilForce / 2, 0);
-
-        //apply gun recoil forces
-
-
-        //apply player rotational forces
-        recoilEvent.Invoke(xRecoil, yRecoil, zRecoil);
+        //found direction towards hit
+        recoilEvent.Invoke(weaponData.bulletRecoilForce);
     }
 }
