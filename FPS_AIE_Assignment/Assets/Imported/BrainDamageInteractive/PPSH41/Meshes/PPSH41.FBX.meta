@@ -1,0 +1,159 @@
+fileFormatVersion: 2
+guid: 4edf52675816a67429889bd95a223b48
+timeCreated: 1522099482
+licenseType: Store
+ModelImporter:
+  serializedVersion: 21
+  fileIDToRecycleName:
+    100000: ejector
+    100002: //RootNode
+    100004: PPSH41body
+    100006: PPSH41Breech
+    100008: PPSH41DrumMagazine
+    100010: PPSH41Safety
+    100012: PPSH41Selector
+    100014: PPSH41StickMagazine
+    100016: PPSH41Trigger
+    100018: 7.62x026
+    100020: 7.62x027
+    100022: 7.62x028
+    100024: 7.62x029
+    100026: 7.62x030
+    100028: 7.62x031
+    100030: 7.62x032
+    400000: ejector
+    400002: //RootNode
+    400004: PPSH41body
+    400006: PPSH41Breech
+    400008: PPSH41DrumMagazine
+    400010: PPSH41Safety
+    400012: PPSH41Selector
+    400014: PPSH41StickMagazine
+    400016: PPSH41Trigger
+    400018: 7.62x026
+    400020: 7.62x027
+    400022: 7.62x028
+    400024: 7.62x029
+    400026: 7.62x030
+    400028: 7.62x031
+    400030: 7.62x032
+    2300000: ejector
+    2300002: PPSH41body
+    2300004: PPSH41Breech
+    2300006: PPSH41DrumMagazine
+    2300008: PPSH41Safety
+    2300010: PPSH41Selector
+    2300012: PPSH41StickMagazine
+    2300014: PPSH41Trigger
+    2300016: 7.62x026
+    2300018: 7.62x027
+    2300020: 7.62x028
+    2300022: 7.62x029
+    2300024: 7.62x030
+    2300026: 7.62x031
+    2300028: 7.62x032
+    3300000: ejector
+    3300002: PPSH41body
+    3300004: PPSH41Breech
+    3300006: PPSH41DrumMagazine
+    3300008: PPSH41Safety
+    3300010: PPSH41Selector
+    3300012: PPSH41StickMagazine
+    3300014: PPSH41Trigger
+    3300016: 7.62x026
+    3300018: 7.62x027
+    3300020: 7.62x028
+    3300022: 7.62x029
+    3300024: 7.62x030
+    3300026: 7.62x031
+    3300028: 7.62x032
+    4300000: PPSH41body
+    4300002: PPSH41Trigger
+    4300004: PPSH41Selector
+    4300006: ejector
+    4300008: PPSH41Breech
+    4300010: PPSH41Safety
+    4300012: PPSH41DrumMagazine
+    4300014: PPSH41StickMagazine
+    4300016: 7.62x026
+    4300018: 7.62x027
+    4300020: 7.62x028
+    4300022: 7.62x029
+    4300024: 7.62x030
+    4300026: 7.62x031
+    4300028: 7.62x032
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

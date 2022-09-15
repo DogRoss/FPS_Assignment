@@ -121,7 +121,11 @@ public class Movement : MonoBehaviour
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        //print(hit.collider.name + " // " + LayerMask.LayerToName(hit.gameObject.layer));
+        if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
+        {
+            print("enter");
+            rgdc.RagdollEnabled = true;
+        }
 
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
@@ -180,14 +184,14 @@ public class Movement : MonoBehaviour
     // Getters
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    private float CurrentSpeed
+    public float CurrentSpeed
     {
         get
         {
             return controller.velocity.magnitude;
         }
     }
-    private float CurrentHorizontalSpeed
+    public float CurrentHorizontalSpeed
     {
         get
         {

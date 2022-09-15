@@ -10,6 +10,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : Movement
 {
+    [Header("Animation")]
+    public Animator gfx;
+
     [Header("Gun Variables")]
     public RangedWeapon gun;
     public Transform hipfirePos;
@@ -42,14 +45,19 @@ public class PlayerController : Movement
     private Vector3 targetRecoilRotation = Vector3.zero;
     //
 
-    [Header("Gun & Wall Collision")]
-    public LayerMask gunCollisionMask;
-    public float gunWallCheckDist = 2f;
+    //TODO: change title to 'Throwable Variables'
+    //TODO: expand functionality to throwable class
+    [Header("Grenade Variables")]
+    public GrenadeWeapon grenadePrefab;
+    public float throwForce = 10f;
+    public float throwAngle = 5f;
+    public float cooldownTime = 5f;
 
-    //camera rays
-    Ray ray;
-    RaycastHit hitData;
-    bool hit = false;
+    //TODO: make a wallcheck distance thing
+    ////camera rays
+    //Ray ray;
+    //RaycastHit hitData;
+    //bool hit = false;
      
     public override void Start()
     {
@@ -63,14 +71,14 @@ public class PlayerController : Movement
 
         CalculateWeaponPosition();
         ApplyRecoil();
+        HandleAnimation();
     }
     public override void FixedUpdate()
     {
         base.FixedUpdate();
-
-        hit = false;
-        ray.origin = cam.transform.position; ray.direction = cam.transform.forward;
-        hit = Physics.Raycast(ray, out hitData, gunWallCheckDist, gunCollisionMask.value);
+        //hit = false;
+        //ray.origin = cam.transform.position; ray.direction = cam.transform.forward;
+        //hit = Physics.Raycast(ray, out hitData, gunWallCheckDist, gunCollisionMask.value);
     }
 
     //--------------------------------------------------------------------------------------------------------------------------
@@ -94,6 +102,13 @@ public class PlayerController : Movement
     {
         if (gun)
             gun.ToggleAuto();
+    }
+    private void OnThrow()
+    {
+        GrenadeWeapon grenadeObj = Instantiate(grenadePrefab);
+        grenadeObj.transform.position = transform.position + transform.forward * 1.5f;
+        grenadeObj.GetComponent<Rigidbody>().AddForce((transform.forward + Vector3.up) * throwForce, ForceMode.Impulse);
+        grenadeObj.StartGrenadeTimer();
     }
 
     //--------------------------------------------------------------------------------------------------------------------------
@@ -122,30 +137,23 @@ public class PlayerController : Movement
 
         //take current movement speed, and store opposite of velocity direction
         Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
-        float amount;
-
-        amount = ads ? (controller.velocity.magnitude / gunDistanceTolerance) / ADSPositionCoefficient : controller.velocity.magnitude / gunDistanceTolerance;
-
-        //amount of lagbehind the gun will experience
-
+        float amount = 0;
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Positional Recoil
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, aimingPositionForce * Time.fixedDeltaTime);
-
         if (ads)
         {
             currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition + adsPos.localPosition, aimingSnappiness * Time.deltaTime);
+            amount = (controller.velocity.magnitude / gunDistanceTolerance) / ADSPositionCoefficient;
         }
         else
         {
             currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition + hipfirePos.localPosition, aimingSnappiness * Time.deltaTime);
+            amount = controller.velocity.magnitude / gunDistanceTolerance;
         }
         gun.transform.localPosition = (velDirection * amount) + currentRecoilPosition;
-
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Rotational Recoil
@@ -157,6 +165,17 @@ public class PlayerController : Movement
         //clamp rotation to max values
         gun.transform.localRotation = Quaternion.Euler(currentRecoilRotation);
         //--------------------------------------------------------------------------------------------------------------------------------------------------
+    }
+    private void HandleAnimation()
+    {
+        if(CurrentSpeed > 0)
+        {
+            gfx.SetBool("Idle", false);
+        }
+        else
+        {
+            gfx.SetBool("Idle", true);
+        }
     }
     private void EquipWeapon(int slot)
     {
