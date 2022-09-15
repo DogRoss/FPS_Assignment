@@ -26,8 +26,10 @@ public class PlayerController : Movement
     public float aimingPositionForce = 10f;
     [Tooltip("speed at which gun recovers from recoil angle offset")]
     public float aimingRotationForce = 5f;
-    [Tooltip("multiplied by aiming(Rotation/Position)Force for aiming down sights.")]
-    public float ADSForceCoefficient = 2f;
+    [Tooltip("multiplied by aiming Position Force for aiming down sights.")]
+    public float ADSPositionCoefficient = 2f;
+    [Tooltip("multiplied by aiming Rotation Force for aiming down sights.")]
+    public float ADSRotationCoefficient = 2f;
     [Tooltip("how fast the gun points and move towards target Vectors")]
     public float aimingSnappiness = 10f;
 
@@ -108,42 +110,28 @@ public class PlayerController : Movement
         vec.x = Random.Range(-force, 0);
         vec.y = Random.Range(-force, force);
 
-        targetRecoilRotation += vec * gun.weaponData.BRFAngularCoefficient;
+        targetRecoilRotation += ads ? (vec / ADSRotationCoefficient) * gun.weaponData.BRFAngularCoefficient : vec * gun.weaponData.BRFAngularCoefficient;
 
         vec.z = -force;
         vec.y = Random.Range(0, force);
         vec.x = Random.Range(-force, force);
-        recoilVelocity += vec;
+        recoilVelocity += ads ? vec / ADSPositionCoefficient : vec;
     }
     private void CalculateWeaponPosition()
     {
-        float aimPosForce, aimRotForce;
 
         //take current movement speed, and store opposite of velocity direction
         Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
         float amount;
 
-        if (ads)
-        {
-            aimPosForce = aimingPositionForce * ADSForceCoefficient;
-            aimRotForce = aimingRotationForce * ADSForceCoefficient;
-            amount = (controller.velocity.magnitude / gunDistanceTolerance) / 2;
-
-        }
-        else
-        {
-            aimPosForce = aimingPositionForce;
-            aimRotForce = aimingRotationForce;
-            amount = controller.velocity.magnitude / gunDistanceTolerance;
-
-        }
+        amount = ads ? (controller.velocity.magnitude / gunDistanceTolerance) / ADSPositionCoefficient : controller.velocity.magnitude / gunDistanceTolerance;
 
         //amount of lagbehind the gun will experience
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Positional Recoil
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-        targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, aimPosForce * Time.fixedDeltaTime);
+        targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, aimingPositionForce * Time.fixedDeltaTime);
 
         if (ads)
         {
@@ -162,7 +150,7 @@ public class PlayerController : Movement
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Rotational Recoil
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-        targetRecoilRotation = Vector3.Lerp(targetRecoilRotation, Vector3.zero, aimRotForce * Time.fixedDeltaTime);
+        targetRecoilRotation = Vector3.Lerp(targetRecoilRotation, Vector3.zero, aimingRotationForce * Time.fixedDeltaTime);
         //account gun rotation for mouse movement
         targetRecoilRotation += mouseVector * turnForce * Time.fixedDeltaTime;
         currentRecoilRotation = Vector3.Slerp(currentRecoilRotation, targetRecoilRotation, aimingSnappiness * Time.fixedDeltaTime);

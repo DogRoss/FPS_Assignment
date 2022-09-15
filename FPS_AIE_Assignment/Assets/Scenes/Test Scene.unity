@@ -367,9 +367,10 @@ MonoBehaviour:
   ads: 0
   turnForce: 4
   gunDistanceTolerance: 350
-  aimingPositionForce: 60
-  aimingRotationForce: 5
-  ADSForceCoefficient: 40
+  aimingPositionForce: 80
+  aimingRotationForce: 10
+  ADSPositionCoefficient: 5
+  ADSRotationCoefficient: 2
   aimingSnappiness: 10
   gunCollisionMask:
     serializedVersion: 2
