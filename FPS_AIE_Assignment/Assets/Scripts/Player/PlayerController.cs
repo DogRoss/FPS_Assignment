@@ -39,8 +39,6 @@ public class PlayerController : Movement
     private Vector3 currentRecoilRotation = Vector3.zero;
     private Vector3 targetRecoilRotation = Vector3.zero;
     //
-    //TODO: make useful
-    private float currentAimForce;
 
     [Header("Gun & Wall Collision")]
     public LayerMask gunCollisionMask;
@@ -121,33 +119,45 @@ public class PlayerController : Movement
     {
         float aimPosForce, aimRotForce;
 
+        //take current movement speed, and store opposite of velocity direction
+        Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
+        float amount;
+
         if (ads)
         {
-            print("why no worky");
             aimPosForce = aimingPositionForce * ADSForceCoefficient;
             aimRotForce = aimingRotationForce * ADSForceCoefficient;
+            amount = (controller.velocity.magnitude / gunDistanceTolerance) / 2;
+
         }
         else
         {
             aimPosForce = aimingPositionForce;
             aimRotForce = aimingRotationForce;
+            amount = controller.velocity.magnitude / gunDistanceTolerance;
+
         }
 
-        //take current movement speed, and store opposite of velocity direction
-        Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
         //amount of lagbehind the gun will experience
-        float amount = controller.velocity.magnitude / gunDistanceTolerance;
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Positional Recoil
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         targetRecoilPosition = Vector3.Lerp(targetRecoilPosition, Vector3.zero, aimPosForce * Time.fixedDeltaTime);
-        currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition, aimingSnappiness * Time.deltaTime);
 
-        gun.transform.localPosition = hipfirePos.localPosition + (velDirection * amount) + currentRecoilPosition;
+        if (ads)
+        {
+            currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition + adsPos.localPosition, aimingSnappiness * Time.deltaTime);
+        }
+        else
+        {
+            currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, targetRecoilPosition + hipfirePos.localPosition, aimingSnappiness * Time.deltaTime);
+        }
+        gun.transform.localPosition = (velDirection * amount) + currentRecoilPosition;
+
         //--------------------------------------------------------------------------------------------------------------------------------------------------
 
-        
+
 
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         // Rotational Recoil

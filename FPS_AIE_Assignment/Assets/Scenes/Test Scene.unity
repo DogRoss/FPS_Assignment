@@ -363,13 +363,13 @@ MonoBehaviour:
   maxLookAngle: 0
   gun: {fileID: 1281494443}
   hipfirePos: {fileID: 625873076}
-  adsPos: {fileID: 0}
+  adsPos: {fileID: 2055220235}
   ads: 0
   turnForce: 4
   gunDistanceTolerance: 350
-  aimingPositionForce: 20
-  aimingRotationForce: 20
-  ADSForceCoefficient: 20
+  aimingPositionForce: 60
+  aimingRotationForce: 5
+  ADSForceCoefficient: 40
   aimingSnappiness: 10
   gunCollisionMask:
     serializedVersion: 2
@@ -2081,7 +2081,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2055220234}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.5}
+  m_LocalPosition: {x: 0, y: -0.08, z: 0.05}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 680039012}
