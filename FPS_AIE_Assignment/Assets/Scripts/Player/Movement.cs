@@ -8,6 +8,7 @@ public class Movement : MonoBehaviour
 {
     protected CharacterController controller;
     protected Camera cam;
+    protected bool movementEnabled = true;
 
     [Header("General Movement Values")]
     [Tooltip("Rate at which Player gains speed.")]
@@ -87,36 +88,38 @@ public class Movement : MonoBehaviour
     }
     public virtual void FixedUpdate()
     {
-
-        if (controller.collisionFlags != CollisionFlags.Sides)
-            touchingWall = false;
-
-        //apply forces to controller
-
-        if (grounded)
+        if (movementEnabled)
         {
-            GroundMovement();
-            GroundFriction();
-            moveVec.y = currentVerticalSpeed;
-            controller.Move(moveVec * Time.deltaTime);
-        }
-        else if(!touchingWall)
-        {
-            //account for gravity
-            currentVerticalSpeed -= gravity;
+            if (controller.collisionFlags != CollisionFlags.Sides)
+                touchingWall = false;
 
-            AirMovement();
-            AirDrag();
-            moveVec.y = currentVerticalSpeed;
-            controller.Move(moveVec * Time.deltaTime);
-        }
-        else
-        {
-            //is touching wall, so account for wall slide
-            WallSlide();
-            WallFriction();
-            moveVec.y = currentVerticalSpeed;
-            controller.Move(moveVec * Time.deltaTime);
+            //apply forces to controller
+
+            if (grounded)
+            {
+                GroundMovement();
+                GroundFriction();
+                moveVec.y = currentVerticalSpeed;
+                controller.Move(moveVec * Time.deltaTime);
+            }
+            else if (!touchingWall)
+            {
+                //account for gravity
+                currentVerticalSpeed -= gravity;
+
+                AirMovement();
+                AirDrag();
+                moveVec.y = currentVerticalSpeed;
+                controller.Move(moveVec * Time.deltaTime);
+            }
+            else
+            {
+                //is touching wall, so account for wall slide
+                WallSlide();
+                WallFriction();
+                moveVec.y = currentVerticalSpeed;
+                controller.Move(moveVec * Time.deltaTime);
+            }
         }
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)

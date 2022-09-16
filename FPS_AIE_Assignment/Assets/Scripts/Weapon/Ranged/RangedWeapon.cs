@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(Rigidbody))]
 public class RangedWeapon : MonoBehaviour
 {
     public Transform muzzle;
+    public Collider[] colliders;
+    public Rigidbody rb;
 
     [Header("Gun Data")]
     public RangedWeaponData weaponData;
@@ -28,6 +31,16 @@ public class RangedWeapon : MonoBehaviour
         else
             auto = false;
 
+        rb = GetComponent<Rigidbody>();
+        colliders = GetComponentsInChildren<Collider>();
+        
+        //TODO:Replace below functions with interface equip function
+        rb.isKinematic = true;
+        foreach(Collider collider in colliders)
+        {
+            collider.enabled = false;
+        }
+
         //playerRecoilEvent.RemoveAllListeners();
     }
     private void FixedUpdate()
@@ -39,8 +52,11 @@ public class RangedWeapon : MonoBehaviour
                 canShoot = true;
                 storedClickTime = 0f;
             }
-            storedClickTime += Time.deltaTime;
+            storedClickTime += Time.fixedDeltaTime;
         }
+
+        //Ignore collision stuff here
+
     }
 
     private void OnDrawGizmos()
@@ -90,10 +106,26 @@ public class RangedWeapon : MonoBehaviour
         if(!auto)
             canShoot = false;
 
-        CalculateRecoil();
+        recoilEvent.Invoke(weaponData.bulletRecoilForce);
         StartCoroutine(FadeTrail(rend));
     }
 
+    /// <summary>
+    /// sets parent to null and enables physics
+    /// makes equipped local space object world space object
+    /// </summary>
+    [ContextMenu("Free Gun")]
+    public void Free()
+    {
+        transform.parent = null;
+        rb.isKinematic = false;
+        foreach(Collider col in colliders)
+        {
+            col.enabled = true;
+        }
+    }
+
+    //Enumerators
     private IEnumerator AutoShoot()
     {
         cActive = true;
@@ -123,11 +155,5 @@ public class RangedWeapon : MonoBehaviour
         }
 
         Destroy(rend.gameObject);
-    }
-
-    private void CalculateRecoil()
-    {
-        //found direction towards hit
-        recoilEvent.Invoke(weaponData.bulletRecoilForce);
     }
 }

@@ -37,5 +37,7 @@ public class RagdollController : MonoBehaviour
         }
     }
 
+    public Animator Anim { get { return animator; } }
+
     public List<Rigidbody> RigidBodies { get { return rigidbodies; } }
 }

@@ -8,10 +8,11 @@ using UnityEngine.InputSystem;
  * handles player interactions like weapons and worldspace interactions
  */
 
-public class PlayerController : Movement
+public class PlayerController : Movement, IDamageable
 {
     [Header("Animation")]
-    public Animator gfx;
+    public RagdollController rc;
+    public float health = 100f;
 
     [Header("Gun Variables")]
     public RangedWeapon gun;
@@ -64,6 +65,10 @@ public class PlayerController : Movement
         base.Start();
 
         gun.recoilEvent += AddRecoil;
+
+        rc = GetComponentInChildren<RagdollController>();
+        if (!rc)
+            Debug.LogError("ERROR: couldnt grab RagdollController!");
     }
     public override void Update()
     {
@@ -170,15 +175,42 @@ public class PlayerController : Movement
     {
         if(CurrentSpeed > 0)
         {
-            gfx.SetBool("Idle", false);
+            rc.Anim.SetBool("Idle", false);
         }
         else
         {
-            gfx.SetBool("Idle", true);
+            rc.Anim.SetBool("Idle", true);
         }
     }
     private void EquipWeapon(int slot)
     {
         //TODO: create functionality, later planned
+    }
+
+    //--------------------------------------------------------------------------------------------------------------------------
+    // Inherited Functions
+    //--------------------------------------------------------------------------------------------------------------------------
+
+    public void TakeDamage(float damage)
+    {
+        print("took: " + damage + " damage");
+
+        health -= damage;
+
+        if (health < 0)
+            OnDeath();
+    }
+
+    [ContextMenu("Die")]
+    public void OnDeath()
+    {
+        rc.RagdollEnabled = true;
+        rc.transform.parent = null;
+        movementEnabled = false;
+
+        gun.Free();
+        gun = null;
+        //TODO: toggle off gun interaction and noticeable character movement
+        //TODO: take away input functionality
     }
 }
