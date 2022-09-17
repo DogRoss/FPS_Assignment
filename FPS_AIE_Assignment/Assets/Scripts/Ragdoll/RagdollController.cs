@@ -6,12 +6,16 @@ using UnityEngine;
 public class RagdollController : MonoBehaviour
 {
     private Animator animator;
+    private RigController rigController;
     private List<Rigidbody> rigidbodies = new List<Rigidbody>();
+
+
 
     // Start is called before the first frame update
     void Start()
     {
         animator = GetComponent<Animator>();
+        rigController = GetComponentInChildren<RigController>();
 
         foreach (Rigidbody rb in transform.root.GetComponentsInChildren<Rigidbody>())
         {
@@ -36,6 +40,8 @@ public class RagdollController : MonoBehaviour
                 rb.isKinematic = !value;
         }
     }
+
+    public RigController RigController { get { return rigController; } }
 
     public Animator Anim { get { return animator; } }
 

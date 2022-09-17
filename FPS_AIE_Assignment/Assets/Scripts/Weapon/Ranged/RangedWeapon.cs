@@ -21,6 +21,10 @@ public class RangedWeapon : MonoBehaviour
     private float storedClickTime = 0f;
     RaycastHit hit;
 
+    //Grab points and hand pose info here
+    public Transform rhtHandPos;
+    public Transform lftHandPos;
+
     public delegate void RecoilEvent(float force);
     public RecoilEvent recoilEvent;
 
@@ -58,12 +62,6 @@ public class RangedWeapon : MonoBehaviour
         //Ignore collision stuff here
 
     }
-
-    private void OnDrawGizmos()
-    {
-        //Gizmos.DrawSphere(muzzle.position, .05f);
-        //Gizmos.DrawSphere(hit.point, .05f);
-    }
     public void ToggleAuto()
     {
         if (weaponData.canAuto)
@@ -93,7 +91,7 @@ public class RangedWeapon : MonoBehaviour
         bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletTravelUPS);
 
         LineRenderer rend = Instantiate(weaponData.trail);
-        rend.SetPosition(0, transform.position);
+        rend.SetPosition(0, muzzle.position);
         if (hitSuccess)
         {
             rend.SetPosition(1, hit.point);
@@ -143,7 +141,7 @@ public class RangedWeapon : MonoBehaviour
     private IEnumerator FadeTrail(LineRenderer rend)
     {
         float currentTime = weaponData.fadeTime;
-        float width = .5f;
+        float width = .1f;
         float percent = 0;
         while(currentTime > 0)
         {

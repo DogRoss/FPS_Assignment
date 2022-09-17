@@ -25,6 +25,10 @@ public class RangedWeaponData : ScriptableObject
     public Vector3 hipPositionalOffset = Vector3.zero;
     public Vector3 aimPositionalOffset = Vector3.zero;
 
+    [Header("Fx")]
+    public LineRenderer trail;
+    public float fadeTime = .1f;
+
     public float RoundsPerSecond
     {
         get
@@ -40,8 +44,5 @@ public class RangedWeaponData : ScriptableObject
         }
     }
 
-    [Header("Fx")]
-    public LineRenderer trail;
-    public float fadeTime = .1f;
-
+   
 }

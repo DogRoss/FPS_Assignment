@@ -181,6 +181,23 @@ public class PlayerController : Movement, IDamageable
         {
             rc.Anim.SetBool("Idle", true);
         }
+
+        //handle rig here
+        if (gun)
+        {
+            //rc.RigController.SetAimDirection(gun.muzzle.forward);
+            RaycastHit hit;
+            Ray ray = new Ray();
+            ray.origin = gun.muzzle.position;
+            ray.direction = gun.muzzle.forward;
+            Physics.Raycast(gun.muzzle.position, gun.muzzle.forward, out hit);
+            if (hit.collider)
+                rc.RigController.SetAimTargetPos(hit.point);
+            else
+                rc.RigController.SetAimTargetPos(transform.position + ray.direction * 200f);
+
+
+        }
     }
     private void EquipWeapon(int slot)
     {
