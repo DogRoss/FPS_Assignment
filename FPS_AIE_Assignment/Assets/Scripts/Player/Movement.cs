@@ -11,6 +11,8 @@ public class Movement : MonoBehaviour
     protected bool movementEnabled = true;
 
     [Header("General Movement Values")]
+    [Tooltip("Weight of player character (in kilograms)")]
+    public float playerMass = 70f;
     [Tooltip("Rate at which Player gains speed.")]
     public float acceleration = 5f;
     [Tooltip("acceleration rate of DownForce the player will experience when in the air.")]
@@ -60,7 +62,7 @@ public class Movement : MonoBehaviour
     public float maxLookAngle;
 
     //Raycast/Ground Check
-    private bool grounded;
+    public bool grounded;
     private bool touchingWall;
 
 
@@ -68,7 +70,8 @@ public class Movement : MonoBehaviour
     private Vector3 direction = Vector3.zero;
     protected Vector3 mouseVector = Vector3.zero;
     //Applied Input
-    private Vector3 moveVec = Vector3.zero;
+    public Vector3 moveVec = Vector3.zero;
+    public Vector3 externalMovement = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
 
     //Temp variables
@@ -85,6 +88,7 @@ public class Movement : MonoBehaviour
     public virtual void Update()
     {
         HandleCamera();
+
     }
     public virtual void FixedUpdate()
     {
@@ -92,15 +96,17 @@ public class Movement : MonoBehaviour
         {
             if (controller.collisionFlags != CollisionFlags.Sides)
                 touchingWall = false;
+            if (controller.collisionFlags == CollisionFlags.None)
+                grounded = false;
 
             //apply forces to controller
-
             if (grounded)
             {
                 GroundMovement();
                 GroundFriction();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move(moveVec * Time.deltaTime);
+                controller.Move((moveVec * Time.deltaTime) + externalMovement);
+                //controller.Move((moveVec * Time.deltaTime));
             }
             else if (!touchingWall)
             {
@@ -110,7 +116,8 @@ public class Movement : MonoBehaviour
                 AirMovement();
                 AirDrag();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move(moveVec * Time.deltaTime);
+                controller.Move((moveVec * Time.deltaTime) + externalMovement);
+                //controller.Move((moveVec * Time.deltaTime));
             }
             else
             {
@@ -118,19 +125,20 @@ public class Movement : MonoBehaviour
                 WallSlide();
                 WallFriction();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move(moveVec * Time.deltaTime);
+                controller.Move((moveVec * Time.deltaTime) + externalMovement);
+                //controller.Move((moveVec * Time.deltaTime));
             }
+
         }
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
         {
-            print("enter");
             rgdc.RagdollEnabled = true;
         }
 
-        if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        if (hit.gameObject.layer == LayerMask.NameToLayer("Ground") && controller.collisionFlags == CollisionFlags.Below)
         {
             touchingWall = false;
             grounded = true;
@@ -146,7 +154,14 @@ public class Movement : MonoBehaviour
                 doubleJumped = false;
         }
     }
-
+    private void OnTriggerStay(Collider other)
+    {
+        if(other.transform.TryGetComponent<MovingPlatform>(out MovingPlatform platform))
+        {
+            print(platform.transform.forward);
+            externalMovement = platform.velocity;
+        }
+    }
     private void OnDrawGizmos()
     {
         //draw movement vector
@@ -164,7 +179,7 @@ public class Movement : MonoBehaviour
     }
     private void OnJump(InputValue value)
     {
-        if(value.Get<float>() > 0)
+        if (value.Get<float>() > 0)
         {
             if (grounded)
                 Jump(false);
@@ -259,10 +274,10 @@ public class Movement : MonoBehaviour
          * return velocity; */
 
         //make sure we are grounded
-        if (!grounded)
-            return;
-        else
-            currentVerticalSpeed = -.1f;
+        //if (!grounded)
+        //    return;
+        //else
+        //    currentVerticalSpeed = -1f;
 
         //store velocity
         Vector3 vel = controller.velocity;

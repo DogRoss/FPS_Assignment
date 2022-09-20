@@ -8,6 +8,7 @@ public class RagdollController : MonoBehaviour
     private Animator animator;
     private RigController rigController;
     private List<Rigidbody> rigidbodies = new List<Rigidbody>();
+    private List<Collider> colliders = new List<Collider>();
 
 
 
@@ -17,10 +18,16 @@ public class RagdollController : MonoBehaviour
         animator = GetComponent<Animator>();
         rigController = GetComponentInChildren<RigController>();
 
-        foreach (Rigidbody rb in transform.root.GetComponentsInChildren<Rigidbody>())
+        foreach (Rigidbody rb in transform.GetComponentsInChildren<Rigidbody>())
         {
             rigidbodies.Add(rb);
             rb.isKinematic = true;
+        }
+
+        foreach(Collider collider in transform.GetComponentsInChildren<Collider>())
+        {
+            colliders.Add(collider);
+            collider.enabled = false;
         }
     }
 
@@ -38,6 +45,8 @@ public class RagdollController : MonoBehaviour
             animator.enabled = !value;
             foreach (Rigidbody rb in rigidbodies)
                 rb.isKinematic = !value;
+            foreach (Collider collider in colliders)
+                collider.enabled = value;
         }
     }
 

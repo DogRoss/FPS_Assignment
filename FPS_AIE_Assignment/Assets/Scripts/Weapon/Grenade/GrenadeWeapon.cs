@@ -9,14 +9,15 @@ public class GrenadeWeapon : MonoBehaviour
     public List<Transform> damageableObjs = new List<Transform>();
 
     public float explosionTime = 5f;
-    public float explosionDamage = 10f;
+    public float explosionDamage = 100f;
+    public float explosionForce = 10f;
 
 
 
     private void OnTriggerEnter(Collider other)
     {
         print("bruh");
-        if (other.TryGetComponent<IDamageable>(out IDamageable damageable))
+        if (other.TryGetComponent<IDamageable>(out IDamageable damageable) || other.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
             damageableObjs.Add(other.transform);
         }
@@ -25,7 +26,7 @@ public class GrenadeWeapon : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         print("bruh");
-        if (other.TryGetComponent<IDamageable>(out IDamageable damageable))
+        if (other.TryGetComponent<IDamageable>(out IDamageable damageable) || other.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
             if(damageableObjs.Contains(other.transform))
                 damageableObjs.Remove(other.transform);
@@ -40,14 +41,21 @@ public class GrenadeWeapon : MonoBehaviour
 
     public void CheckObjectWithinGrenade(Transform damageableObject)
     {
+        if (damageableObject == null)
+            return;
+
         //damage event happens here
         ray.origin = transform.position;
         ray.direction = (damageableObject.position - ray.origin).normalized;
         if(Physics.Raycast(ray, out hit))
         {
-            if(hit.transform == damageableObject && damageableObject.TryGetComponent<IDamageable>(out IDamageable damageable))
+            if(hit.transform == damageableObject)
             {
-                damageable?.TakeDamage(explosionDamage);
+                if(hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
+                    rb.AddForce(ray.direction * explosionForce, ForceMode.Impulse);
+
+                if(damageableObject.TryGetComponent<IDamageable>(out IDamageable damageable))
+                    damageable?.TakeDamage(explosionDamage);
             }
         }
     }
