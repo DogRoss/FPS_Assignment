@@ -138,6 +138,12 @@ public class Movement : MonoBehaviour
             rgdc.RagdollEnabled = true;
         }
 
+        //if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb) && hit.point.y > transform.position.y - (controller.height / 2))
+        if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
+        {
+            rb.AddForceAtPosition((controller.velocity * playerMass) * Time.deltaTime, hit.point, ForceMode.Impulse);
+        }
+
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground") && controller.collisionFlags == CollisionFlags.Below)
         {
             touchingWall = false;
@@ -159,7 +165,7 @@ public class Movement : MonoBehaviour
         if(other.transform.TryGetComponent<MovingPlatform>(out MovingPlatform platform))
         {
             print(platform.transform.forward);
-            externalMovement = platform.velocity;
+            externalMovement = platform.velocity.normalized * platform.finalMoveSpeed;
         }
     }
     private void OnDrawGizmos()

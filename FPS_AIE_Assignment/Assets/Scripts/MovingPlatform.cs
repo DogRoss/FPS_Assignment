@@ -13,6 +13,9 @@ public class MovingPlatform : MonoBehaviour
     [SerializeField] float waitTime = 2f;
     bool posA;
 
+    [HideInInspector]
+    public float finalMoveSpeed = 0f;
+
     public Vector3 velocity = Vector3.zero;
     public Vector3 lastPos = Vector3.zero;
 
@@ -22,6 +25,8 @@ public class MovingPlatform : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         //rb.constraints = RigidbodyConstraints.FreezeAll;
         rb.useGravity = false;
+
+        finalMoveSpeed = moveSpeed * Time.fixedDeltaTime;
 
         StartCoroutine(MovePlatform(true));
     }
@@ -52,7 +57,7 @@ public class MovingPlatform : MonoBehaviour
         float distance = Vector3.Distance(transform.position, tPosition.position);
         while (distance > 0.1f)
         {
-            transform.position += (direction * moveSpeed) * Time.deltaTime;
+            transform.position += direction * finalMoveSpeed;
             distance = Vector3.Distance(transform.position, tPosition.position);
             yield return null;
         }
