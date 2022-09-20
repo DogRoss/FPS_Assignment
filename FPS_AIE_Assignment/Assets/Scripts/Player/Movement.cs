@@ -71,7 +71,7 @@ public class Movement : MonoBehaviour
     protected Vector3 mouseVector = Vector3.zero;
     //Applied Input
     public Vector3 moveVec = Vector3.zero;
-    public Vector3 externalMovement = Vector3.zero;
+    public Vector3 addedVelocity = Vector3.zero;
     private Vector3 playerInputDirec = Vector3.zero;
 
     //Temp variables
@@ -96,7 +96,7 @@ public class Movement : MonoBehaviour
         {
             if (controller.collisionFlags != CollisionFlags.Sides)
                 touchingWall = false;
-            if (controller.collisionFlags == CollisionFlags.None)
+            if (controller.collisionFlags != CollisionFlags.Below)
                 grounded = false;
 
             //apply forces to controller
@@ -105,8 +105,6 @@ public class Movement : MonoBehaviour
                 GroundMovement();
                 GroundFriction();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move((moveVec * Time.deltaTime) + externalMovement);
-                //controller.Move((moveVec * Time.deltaTime));
             }
             else if (!touchingWall)
             {
@@ -116,8 +114,6 @@ public class Movement : MonoBehaviour
                 AirMovement();
                 AirDrag();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move((moveVec * Time.deltaTime) + externalMovement);
-                //controller.Move((moveVec * Time.deltaTime));
             }
             else
             {
@@ -125,12 +121,14 @@ public class Movement : MonoBehaviour
                 WallSlide();
                 WallFriction();
                 moveVec.y = currentVerticalSpeed;
-                controller.Move((moveVec * Time.deltaTime) + externalMovement);
-                //controller.Move((moveVec * Time.deltaTime));
             }
 
+            moveVec += addedVelocity;
+            addedVelocity = Vector3.zero;
+            controller.Move(moveVec * Time.deltaTime);
         }
     }
+    int i = 0;
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
@@ -138,10 +136,11 @@ public class Movement : MonoBehaviour
             rgdc.RagdollEnabled = true;
         }
 
-        //if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb) && hit.point.y > transform.position.y - (controller.height / 2))
         if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
-            rb.AddForceAtPosition((controller.velocity * playerMass) * Time.deltaTime, hit.point, ForceMode.Impulse);
+            i++;
+            print("AAAA" + i);
+            rb.AddForceAtPosition(controller.velocity * playerMass + (controller.velocity.normalized * (acceleration * playerMass)), hit.point, ForceMode.Force);
         }
 
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground") && controller.collisionFlags == CollisionFlags.Below)
@@ -160,14 +159,7 @@ public class Movement : MonoBehaviour
                 doubleJumped = false;
         }
     }
-    private void OnTriggerStay(Collider other)
-    {
-        if(other.transform.TryGetComponent<MovingPlatform>(out MovingPlatform platform))
-        {
-            print(platform.transform.forward);
-            externalMovement = platform.velocity.normalized * platform.finalMoveSpeed;
-        }
-    }
+    
     private void OnDrawGizmos()
     {
         //draw movement vector
@@ -280,10 +272,10 @@ public class Movement : MonoBehaviour
          * return velocity; */
 
         //make sure we are grounded
-        //if (!grounded)
-        //    return;
-        //else
-        //    currentVerticalSpeed = -1f;
+        if (!grounded)
+            return;
+        else
+            currentVerticalSpeed = -1f;
 
         //store velocity
         Vector3 vel = controller.velocity;
@@ -396,5 +388,11 @@ public class Movement : MonoBehaviour
         }
         
         moveVec -= counterForce;
+    }
+
+    public void AddForce(Vector3 force)
+    {
+        print("AddForce called");
+        addedVelocity += force;
     }
 }
