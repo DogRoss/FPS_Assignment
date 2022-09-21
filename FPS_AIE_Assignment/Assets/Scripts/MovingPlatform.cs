@@ -35,16 +35,16 @@ public class MovingPlatform : MonoBehaviour
         print("enter: " + other.transform.name);
         if(other.transform.TryGetComponent<Movement>(out Movement move))
         {
-            other.transform.SetParent(transform.parent, true);
-            move.AddForce(-velocity);
+            other.transform.parent = transform;
+            move.SetForce(-move.Controller.velocity);
         }
     }
     private void OnTriggerExit(Collider other)
     {
         print("exit: " + other.transform.name);
-        if(other.transform.parent == transform.parent && other.transform.TryGetComponent<Movement>(out Movement move))
+        if(other.transform.parent == transform && other.transform.TryGetComponent<Movement>(out Movement move))
         {
-            other.transform.SetParent(null);
+            move.transform.parent = null;
             move.AddForce(velocity);
         }
     }

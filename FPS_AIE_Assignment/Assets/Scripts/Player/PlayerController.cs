@@ -95,6 +95,9 @@ public class PlayerController : Movement, IDamageable
     //--------------------------------------------------------------------------------------------------------------------------
     private void OnLMouseDown(InputValue value)
     {
+        if (!gun)
+            return;
+
         if (value.Get<float>() > 0)
             gun.ToggleShot(true);
         if (value.Get<float>() <= 0)
@@ -115,8 +118,8 @@ public class PlayerController : Movement, IDamageable
     private void OnThrow()
     {
         GrenadeWeapon grenadeObj = Instantiate(grenadePrefab);
-        grenadeObj.transform.position = transform.position + transform.forward * 1.5f;
-        grenadeObj.GetComponent<Rigidbody>().AddForce((transform.forward + Vector3.up) * throwForce, ForceMode.Impulse);
+        grenadeObj.transform.position = cam.transform.position + cam.transform.forward;
+        grenadeObj.GetComponent<Rigidbody>().AddForce(cam.transform.forward * throwForce, ForceMode.Impulse);
         grenadeObj.StartGrenadeTimer();
     }
 
@@ -143,6 +146,8 @@ public class PlayerController : Movement, IDamageable
     }
     private void CalculateWeaponPosition()
     {
+        if (!gun)
+            return;
 
         //take current movement speed, and store opposite of velocity direction
         Vector3 velDirection = transform.InverseTransformDirection(-controller.velocity.normalized);
@@ -225,6 +230,7 @@ public class PlayerController : Movement, IDamageable
     [ContextMenu("Die")]
     public void OnDeath()
     {
+        controller.enabled = false;
         rc.RagdollEnabled = true;
         rc.transform.parent = null;
         movementEnabled = false;

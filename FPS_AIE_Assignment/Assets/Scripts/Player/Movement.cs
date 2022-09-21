@@ -20,6 +20,7 @@ public class Movement : MonoBehaviour
     public float gravity = 0.5f;
     [Tooltip("force used to send player into the air.")]
     public float jumpForce = 10f;
+    public LayerMask groundMask;
 
     private float currentVerticalSpeed = 0f;
     private bool doubleJumped = false;
@@ -65,6 +66,7 @@ public class Movement : MonoBehaviour
     //Raycast/Ground Check
     public bool grounded;
     private bool touchingWall;
+    private bool crouching = false;
 
 
     //Input
@@ -96,39 +98,51 @@ public class Movement : MonoBehaviour
     {
         if (movementEnabled)
         {
+            if (Physics.Raycast(transform.position, Vector3.down, (controller.height / 2) + .1f, groundMask))
+            {
+                print("entteeeer");
+                touchingWall = false;
+                grounded = true;
+                if (doubleJumped)
+                    doubleJumped = false;
+            }
+            else
+            {
+                print("whaaat");
+
+                grounded = false;
+            }
+
+            Debug.DrawLine(transform.position, transform.position + (Vector3.down * ((controller.height / 2) + 0.3f)), Color.magenta);
+
             if (controller.collisionFlags != CollisionFlags.Sides)
                 touchingWall = false;
-            if (controller.collisionFlags == CollisionFlags.None)
-                grounded = false;
+            //if (controller.collisionFlags != CollisionFlags.None)
+            //    grounded = false;
 
             //apply forces to controller
             if (grounded)
             {
                 GroundMovement();
                 GroundFriction();
-                moveVec.y = currentVerticalSpeed;
             }
             else if (!touchingWall)
             {
                 //account for gravity
-                currentVerticalSpeed -= gravity;
-
                 AirMovement();
                 AirDrag();
-                moveVec.y = currentVerticalSpeed;
             }
             else
             {
                 //is touching wall, so account for wall slide
                 WallSlide();
                 WallFriction();
-                moveVec.y = currentVerticalSpeed;
             }
 
+            moveVec.y = currentVerticalSpeed;
             moveVec += addedVelocity;
             addedVelocity = Vector3.zero;
             controller.Move(moveVec * Time.deltaTime);
-
         }
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
@@ -140,15 +154,12 @@ public class Movement : MonoBehaviour
 
         if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
-            rb.AddForceAtPosition(controller.velocity * playerMass + (controller.velocity.normalized * (acceleration * playerMass)), hit.point, ForceMode.Force);
+            rb.AddForceAtPosition(controller.velocity + (controller.velocity.normalized * (acceleration * playerMass)), hit.point, ForceMode.Force);
         }
 
-        if (hit.gameObject.layer == LayerMask.NameToLayer("Ground") && controller.collisionFlags == CollisionFlags.Below)
+        if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
-            touchingWall = false;
-            grounded = true;
-            if (doubleJumped)
-                doubleJumped = false;
+            
         }
         else if (!grounded && hit.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
@@ -222,6 +233,13 @@ public class Movement : MonoBehaviour
             return cam;
         }
     }
+    public CharacterController Controller
+    {
+        get
+        {
+            return controller;
+        }
+    }
 
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Player Functions
@@ -255,6 +273,8 @@ public class Movement : MonoBehaviour
             return;
         }
 
+        currentVerticalSpeed -= gravity;
+
         //store velocity
         Vector3 vel = moveVec;
         vel.y = 0;
@@ -281,8 +301,8 @@ public class Movement : MonoBehaviour
         //make sure we are grounded
         if (!grounded)
             return;
-        else
-            currentVerticalSpeed = -1f;
+
+        currentVerticalSpeed = -.1f;
 
         //store velocity
         Vector3 vel = controller.velocity;
@@ -401,5 +421,10 @@ public class Movement : MonoBehaviour
     {
         print("AddForce called");
         addedVelocity += force;
+    }
+
+    public void SetForce(Vector3 force)
+    {
+        addedVelocity = force;
     }
 }
