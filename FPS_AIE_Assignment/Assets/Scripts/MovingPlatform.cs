@@ -35,21 +35,17 @@ public class MovingPlatform : MonoBehaviour
         print("enter: " + other.transform.name);
         if(other.transform.TryGetComponent<Movement>(out Movement move))
         {
-            other.transform.parent = transform;
-            other.transform.up = transform.up;
-            other.transform.lossyScale.Set(1,1,1);
-            other.GetComponent<Movement>()?.AddForce(-velocity);
+            other.transform.SetParent(transform.parent, true);
+            move.AddForce(-velocity);
         }
     }
     private void OnTriggerExit(Collider other)
     {
         print("exit: " + other.transform.name);
-        if(other.transform.parent == transform)
+        if(other.transform.parent == transform.parent && other.transform.TryGetComponent<Movement>(out Movement move))
         {
-            other.transform.parent = null;
-            other.transform.up = Vector3.up;
-            other.transform.localScale = Vector3.one;
-            other.GetComponent<Movement>()?.AddForce(velocity);
+            other.transform.SetParent(null);
+            move.AddForce(velocity);
         }
     }
 
@@ -61,7 +57,6 @@ public class MovingPlatform : MonoBehaviour
         while (distance > 0.1f)
         {
             transform.position += direction * moveSpeed * Time.deltaTime;
-            transform.Rotate(transform.forward, 30 * Time.deltaTime);
             distance = Vector3.Distance(transform.position, tPosition.position);
             direction = (tPosition.position - transform.position).normalized;
             yield return null;

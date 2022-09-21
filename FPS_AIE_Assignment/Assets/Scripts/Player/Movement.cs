@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
+
     protected CharacterController controller;
     protected Camera cam;
     protected bool movementEnabled = true;
@@ -82,6 +83,7 @@ public class Movement : MonoBehaviour
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     public virtual void Start()
     {
+
         controller = GetComponent<CharacterController>();
         cam = Camera.main;
     }
@@ -96,7 +98,7 @@ public class Movement : MonoBehaviour
         {
             if (controller.collisionFlags != CollisionFlags.Sides)
                 touchingWall = false;
-            if (controller.collisionFlags != CollisionFlags.Below)
+            if (controller.collisionFlags == CollisionFlags.None)
                 grounded = false;
 
             //apply forces to controller
@@ -126,9 +128,9 @@ public class Movement : MonoBehaviour
             moveVec += addedVelocity;
             addedVelocity = Vector3.zero;
             controller.Move(moveVec * Time.deltaTime);
+
         }
     }
-    int i = 0;
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
@@ -138,8 +140,6 @@ public class Movement : MonoBehaviour
 
         if (hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
-            i++;
-            print("AAAA" + i);
             rb.AddForceAtPosition(controller.velocity * playerMass + (controller.velocity.normalized * (acceleration * playerMass)), hit.point, ForceMode.Force);
         }
 
@@ -213,6 +213,13 @@ public class Movement : MonoBehaviour
         {
             Vector2 vec = new Vector2(controller.velocity.x, controller.velocity.z);
             return vec.magnitude;
+        }
+    }
+    public Camera Cam
+    {
+        get
+        {
+            return cam;
         }
     }
 

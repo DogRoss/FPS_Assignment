@@ -10,6 +10,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : Movement, IDamageable
 {
+    public static Movement player;
+
     [Header("Animation")]
     public RagdollController rc;
     public float health = 100f;
@@ -63,6 +65,8 @@ public class PlayerController : Movement, IDamageable
     public override void Start()
     {
         base.Start();
+
+        player = this;
 
         gun.recoilEvent += AddRecoil;
 
