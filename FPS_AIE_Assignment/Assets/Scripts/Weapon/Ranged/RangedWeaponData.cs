@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Scriptable Object data, RangedWeapon script uses the data provided to change how interactions with the weapon work.
+/// The data pertains to ranged weapons (i.e. guns).
+/// </summary>
 [CreateAssetMenu(fileName = "WeaponData", menuName = "WeaponData/Create WeaponData")]
 public class RangedWeaponData : ScriptableObject
 {

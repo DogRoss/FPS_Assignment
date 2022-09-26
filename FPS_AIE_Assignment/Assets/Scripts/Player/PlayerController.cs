@@ -8,6 +8,10 @@ using UnityEngine.InputSystem;
  * handles player interactions like weapons and worldspace interactions
  */
 
+/// <summary>
+/// Handles player and player interactions, like guns and grenades.
+/// Inherits Movement class and IDamageable interface.
+/// </summary>
 public class PlayerController : Movement, IDamageable
 {
     public static Movement player;
@@ -120,7 +124,7 @@ public class PlayerController : Movement, IDamageable
         GrenadeWeapon grenadeObj = Instantiate(grenadePrefab);
         grenadeObj.transform.position = cam.transform.position + cam.transform.forward;
         grenadeObj.GetComponent<Rigidbody>().AddForce(cam.transform.forward * throwForce, ForceMode.Impulse);
-        grenadeObj.StartGrenadeTimer();
+        StartCoroutine(grenadeObj.GrenadeTimer());
     }
 
     //--------------------------------------------------------------------------------------------------------------------------

@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Simple grenade weapon that works based off raycasting all IDamageables in a certain distance.
+/// </summary>
 public class GrenadeWeapon : MonoBehaviour
 {
     private Ray ray;
@@ -33,12 +36,10 @@ public class GrenadeWeapon : MonoBehaviour
         }
     }
 
-    [ContextMenu("StartGrenadeTimer")]
-    public void StartGrenadeTimer()
-    {
-        StartCoroutine(GrenadeTimer());
-    }
-
+    /// <summary>
+    /// Checks given object to see if it is within sightline of grenade blast.
+    /// </summary>
+    /// <param name="damageableObject"></param>
     public void CheckObjectWithinGrenade(Transform damageableObject)
     {
         if (damageableObject == null)
@@ -59,7 +60,10 @@ public class GrenadeWeapon : MonoBehaviour
             }
         }
     }
-
+    /// <summary>
+    /// Coroutine that handles the time before grenade explosion and the given interaction.
+    /// </summary>
+    /// <returns></returns>
     public IEnumerator GrenadeTimer()
     {
         float currentTime = 0f;

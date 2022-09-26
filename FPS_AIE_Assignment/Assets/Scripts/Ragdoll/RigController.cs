@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
+/// <summary>
+/// Handles Ragdoll rig, used mainly for IK application.
+/// </summary>
 public class RigController : MonoBehaviour
 {
     //General Rig

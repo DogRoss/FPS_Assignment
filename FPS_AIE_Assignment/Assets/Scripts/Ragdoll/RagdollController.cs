@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Controls whether or not ragdoll is active or not using a RigController and Animator.
+/// </summary>
 [RequireComponent(typeof(Animator))]
 public class RagdollController : MonoBehaviour
 {

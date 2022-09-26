@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Handles weapon interactions that include a projectile being fired from a object.
+/// Stats are based off Scriptable Object data (RangedWeaponData).
+/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class RangedWeapon : MonoBehaviour
 {
@@ -71,6 +75,11 @@ public class RangedWeapon : MonoBehaviour
 
         print("auto toggle: " + auto);
     }
+    /// <summary>
+    /// Toggles ranged weapon firing.
+    /// Values used in case automatic firing is enabled.
+    /// </summary>
+    /// <param name="firing"></param>
     public void ToggleShot(bool firing)
     {
         if (firing && canShoot)
@@ -84,7 +93,9 @@ public class RangedWeapon : MonoBehaviour
         else
             lmbHeld = false;
     }
-
+    /// <summary>
+    /// Handles interaction that happens when ranged weapon is fired.
+    /// </summary>
     private void Shoot()
     {
 
@@ -124,6 +135,10 @@ public class RangedWeapon : MonoBehaviour
     }
 
     //Enumerators
+    /// <summary>
+    /// Handles firing interaction when automatic firing is enabled.
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator AutoShoot()
     {
         cActive = true;
@@ -137,7 +152,11 @@ public class RangedWeapon : MonoBehaviour
         canShoot = false;
         cActive = false;
     }
-
+    /// <summary>
+    /// fades bullet trail at fixed rate.
+    /// </summary>
+    /// <param name="rend"></param>
+    /// <returns></returns>
     private IEnumerator FadeTrail(LineRenderer rend)
     {
         float currentTime = weaponData.fadeTime;
