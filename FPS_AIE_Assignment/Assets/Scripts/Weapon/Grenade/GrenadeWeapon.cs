@@ -16,6 +16,14 @@ public class GrenadeWeapon : MonoBehaviour
     public float explosionForce = 10f;
 
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        foreach (Transform obj in damageableObjs)
+        {
+            CheckObjectWithinGrenade(obj);
+        }
+        Destroy(gameObject);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -28,7 +36,7 @@ public class GrenadeWeapon : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        print("bruh");
+    
         if (other.TryGetComponent<IDamageable>(out IDamageable damageable) || other.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
             if(damageableObjs.Contains(other.transform))
@@ -66,6 +74,12 @@ public class GrenadeWeapon : MonoBehaviour
     /// <returns></returns>
     public IEnumerator GrenadeTimer()
     {
+        if (!this)
+        {
+            print("break away");
+            yield break;
+        }
+
         float currentTime = 0f;
         while (currentTime < explosionTime)
         {
@@ -75,10 +89,13 @@ public class GrenadeWeapon : MonoBehaviour
 
         foreach(Transform obj in damageableObjs)
         {
-            CheckObjectWithinGrenade(obj);
+            if (this)
+                CheckObjectWithinGrenade(obj);
         }
 
-        DestroyImmediate(gameObject);
+        if (this)
+            DestroyImmediate(gameObject);
+
         yield return null;
     }
 }

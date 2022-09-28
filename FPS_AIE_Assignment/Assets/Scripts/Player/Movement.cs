@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// FPS movement character controller 3D.
+/// simulates rigidbody-like behaviour with adding and transferring of forces
+/// there is no set max speed for anything, drag and other counteracting forces calculate a max speed in real time
+/// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
@@ -10,6 +15,8 @@ public class Movement : MonoBehaviour
     protected CharacterController controller;
     protected Camera cam;
     protected bool movementEnabled = true;
+
+    public Transform spawn;
 
     [Header("General Movement Values")]
     [Tooltip("Weight of player character (in kilograms)")]
@@ -98,18 +105,9 @@ public class Movement : MonoBehaviour
     {
         if (movementEnabled)
         {
-            if (Physics.Raycast(transform.position, Vector3.down, (controller.height / 2) + .1f, groundMask))
-            {
-                print("entteeeer");
-                touchingWall = false;
-                grounded = true;
-                if (doubleJumped)
-                    doubleJumped = false;
-            }
-            else
-            {
-                print("whaaat");
 
+            if (controller.collisionFlags == CollisionFlags.None)
+            {
                 grounded = false;
             }
 
@@ -147,6 +145,11 @@ public class Movement : MonoBehaviour
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        if(hit.gameObject.layer == LayerMask.NameToLayer("Death"))
+        {
+            controller.transform.position = spawn.position;
+        }
+
         if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
         {
             rgdc.RagdollEnabled = true;
@@ -159,7 +162,11 @@ public class Movement : MonoBehaviour
 
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
-            
+            print("entteeeer");
+            touchingWall = false;
+            grounded = true;
+            if (doubleJumped)
+                doubleJumped = false;
         }
         else if (!grounded && hit.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
@@ -245,8 +252,9 @@ public class Movement : MonoBehaviour
     // Player Functions
     //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    /* 
-     * Handles camera movement for looking around */
+    /// <summary>
+    /// Handles camera movement for looking around
+    /// </summary>
     private void HandleCamera()
     {
         Vector3 axis = mouseVector;
@@ -258,8 +266,9 @@ public class Movement : MonoBehaviour
         transform.Rotate(axis, Mathf.Abs(mouseVector.y) * sensitivity);
     }
 
-    /*
-     * Handles what direction the player will move in based on being in the air and input direction */
+    /// <summary>
+    /// Handles what direction the player will move in based on being in the air and input direction
+    /// </summary>
     private void AirMovement()
     {
         /* grab current velocity, this will be the value that forces act against;
@@ -289,8 +298,9 @@ public class Movement : MonoBehaviour
         moveVec = vel;
     }
 
-    /*
-     * Handles what direction the player will move in based on being grounded and input direction */
+    /// <summary>
+    /// Handles what direction the player will move in based on being grounded and input direction
+    /// </summary>
     private void GroundMovement()
     {
         /* grab current velocity, this will be the value that forces act against;
@@ -321,8 +331,9 @@ public class Movement : MonoBehaviour
     }
 
 
-    /*
-     * -v- Handles forces that oppose Player's movement on the ground */
+    /// <summary>
+    /// Handles forces that oppose Player's movement on the ground
+    /// </summary>
     private void GroundFriction()
     {
         Vector3 counterForce = Vector3.zero;
@@ -334,8 +345,9 @@ public class Movement : MonoBehaviour
 
         moveVec -= counterForce;
     }
-    /*
-     * Handles Forces in air that oppose Player's movement through the air */
+    /// <summary>
+    /// Handles Forces in air that oppose Player's movement through the air 
+    /// </summary>
     private void AirDrag()
     {
         Vector3 counterForce = Vector3.zero;
@@ -351,8 +363,10 @@ public class Movement : MonoBehaviour
     }
 
 
-    /*
-     * Handles Jump Forces on player based on if the player is on a wall or on ground */
+    /// <summary>
+    /// Handles Jump Forces on player based on if the player is on a wall or on ground 
+    /// </summary>
+    /// <param name="wallJump"></param>
     private void Jump(bool wallJump)
     {
         if (!wallJump)
@@ -368,8 +382,9 @@ public class Movement : MonoBehaviour
 
         grounded = false;
     }
-    /*
-     * Handles how the Player moves against the wall in a sliding motion */
+    /// <summary>
+    /// Handles how the Player moves against the wall in a sliding motion
+    /// </summary>
     private void WallSlide()
     {
 
@@ -396,7 +411,9 @@ public class Movement : MonoBehaviour
         //add to movement vector
         moveVec += forces;
     }
-
+    /// <summary>
+    /// handles how counteracting forces affect Player's movement
+    /// </summary>
     private void WallFriction()
     {
         //calculate gravity on wall

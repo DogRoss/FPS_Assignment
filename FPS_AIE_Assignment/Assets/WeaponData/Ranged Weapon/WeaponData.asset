@@ -16,11 +16,12 @@ MonoBehaviour:
   clipSize: 1
   canAuto: 1
   damagePerBullet: 50
-  bulletTravelUPS: 200
+  bulletVelocity: 200
   bulletsPerShot: 1
+  bulletMass: 0.0055
   bulletRecoilForce: 2.0467
   BRFAngularCoefficient: 5
   hipPositionalOffset: {x: 0, y: 0, z: 0}
-  aimPositionalOffset: {x: 0, y: -0.07, z: 0}
+  aimPositionalOffset: {x: 0, y: -30.35, z: 0}
   trail: {fileID: 2679031306013335293, guid: fb00cb92d949d8a48905bea650a6a1a0, type: 3}
   fadeTime: 0.1

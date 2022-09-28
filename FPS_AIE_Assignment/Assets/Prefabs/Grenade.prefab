@@ -59,7 +59,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 10
+  m_Radius: 2
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &1981964797639260524
 Rigidbody:
@@ -90,9 +90,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damageableObjs: []
-  explosionTime: 2
+  explosionTime: 5
   explosionDamage: 100
-  explosionForce: 50
+  explosionForce: 150
 --- !u!1 &1981964798853557758
 GameObject:
   m_ObjectHideFlags: 0

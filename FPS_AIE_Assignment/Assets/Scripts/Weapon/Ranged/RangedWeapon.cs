@@ -99,17 +99,21 @@ public class RangedWeapon : MonoBehaviour
     private void Shoot()
     {
 
-        bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletTravelUPS);
+        bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletVelocity);
 
         LineRenderer rend = Instantiate(weaponData.trail);
         rend.SetPosition(0, muzzle.position);
         if (hitSuccess)
         {
             rend.SetPosition(1, hit.point);
+            print(weaponData.BulletForce);
+            hit.transform.GetComponent<IDamageable>()?.TakeDamage(weaponData.damagePerBullet);
+            hit.transform.TryGetComponent<Rigidbody>(out Rigidbody rigid);
+            rigid?.AddForceAtPosition(muzzle.forward * weaponData.BulletForce, hit.point, ForceMode.Impulse);
         }
         else
         {
-            rend.SetPosition(1, muzzle.position + (muzzle.forward * weaponData.bulletTravelUPS));
+            rend.SetPosition(1, muzzle.position + (muzzle.forward * weaponData.bulletVelocity));
         }
 
         if(!auto)

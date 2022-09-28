@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /*
  * inherits movement for movement variables
@@ -42,6 +43,7 @@ public class PlayerController : Movement, IDamageable
     public float ADSRotationCoefficient = 2f;
     [Tooltip("how fast the gun points and move towards target Vectors")]
     public float aimingSnappiness = 10f;
+    public Image reticle;
 
     //Position
     private Vector3 targetRecoilPosition = Vector3.zero;
@@ -60,6 +62,7 @@ public class PlayerController : Movement, IDamageable
     public float throwAngle = 5f;
     public float cooldownTime = 5f;
 
+    private float currentTime = 0f;
     //TODO: make a wallcheck distance thing
     ////camera rays
     //Ray ray;
@@ -85,6 +88,8 @@ public class PlayerController : Movement, IDamageable
         CalculateWeaponPosition();
         ApplyRecoil();
         HandleAnimation();
+
+        currentTime += Time.deltaTime;
     }
     public override void FixedUpdate()
     {
@@ -110,9 +115,15 @@ public class PlayerController : Movement, IDamageable
     private void OnRMouseDown(InputValue value)
     {
         if (value.Get<float>() > 0)
+        {
             ads = true;
+            reticle.enabled = false;
+        }
         else
-            ads = false; 
+        {
+            ads = false;
+            reticle.enabled = true;
+        }
     }
     private void OnSwitchFireMode()
     {
@@ -121,20 +132,33 @@ public class PlayerController : Movement, IDamageable
     }
     private void OnThrow()
     {
-        GrenadeWeapon grenadeObj = Instantiate(grenadePrefab);
-        grenadeObj.transform.position = cam.transform.position + cam.transform.forward;
-        grenadeObj.GetComponent<Rigidbody>().AddForce(cam.transform.forward * throwForce, ForceMode.Impulse);
-        StartCoroutine(grenadeObj.GrenadeTimer());
+        if(currentTime > cooldownTime)
+        {
+            GrenadeWeapon grenadeObj = Instantiate(grenadePrefab);
+            grenadeObj.transform.position = cam.transform.position + (cam.transform.forward * 2);
+            grenadeObj.GetComponent<Rigidbody>().AddForce(cam.transform.forward * throwForce, ForceMode.Impulse);
+            StartCoroutine(grenadeObj.GrenadeTimer());
+
+            currentTime = 0;
+        }
+        
     }
 
     //--------------------------------------------------------------------------------------------------------------------------
     // User Functions
     //--------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Applies recoil values to gun and drops off recoil energy over time
+    /// </summary>
     private void ApplyRecoil()
     {
         currentRecoilPosition += recoilVelocity * Time.fixedDeltaTime;
         recoilVelocity = Vector3.Lerp(recoilVelocity, Vector3.zero, aimingPositionForce * Time.fixedDeltaTime);
     }
+    /// <summary>
+    /// Adds recoil force to the Player/Gun recoil values
+    /// </summary>
+    /// <param name="force"></param>
     private void AddRecoil(float force)
     {
         Vector3 vec = Vector3.zero;
@@ -148,6 +172,9 @@ public class PlayerController : Movement, IDamageable
         vec.x = Random.Range(-force, force);
         recoilVelocity += ads ? vec / ADSPositionCoefficient : vec;
     }
+    /// <summary>
+    /// takes in relevant position/rotation values and applies to gun
+    /// </summary>
     private void CalculateWeaponPosition()
     {
         if (!gun)
@@ -184,6 +211,9 @@ public class PlayerController : Movement, IDamageable
         gun.transform.localRotation = Quaternion.Euler(currentRecoilRotation);
         //--------------------------------------------------------------------------------------------------------------------------------------------------
     }
+    /// <summary>
+    /// Handles Ragdoll Rig controller
+    /// </summary>
     private void HandleAnimation()
     {
         if(CurrentSpeed > 0)
@@ -227,17 +257,26 @@ public class PlayerController : Movement, IDamageable
 
         health -= damage;
 
-        if (health < 0)
+        if (health <= 0)
             OnDeath();
     }
 
     [ContextMenu("Die")]
     public void OnDeath()
     {
+        Vector3 force = controller.velocity;
+
         controller.enabled = false;
         rc.RagdollEnabled = true;
         rc.transform.parent = null;
         movementEnabled = false;
+
+        foreach(Rigidbody rb in rc.RigidBodies)
+        {
+            rb.velocity = force;
+        }
+
+        Camera.main.cullingMask = -1;
 
         gun.Free();
         gun = null;

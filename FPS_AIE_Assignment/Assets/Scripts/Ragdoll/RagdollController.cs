@@ -40,6 +40,9 @@ public class RagdollController : MonoBehaviour
         RagdollEnabled = true;
     }
 
+    /// <summary>
+    /// toggles whether or not ragdoll is active
+    /// </summary>
     public bool RagdollEnabled
     {
         get { return !animator.enabled; }
