@@ -32,6 +32,9 @@ public class RangedWeapon : MonoBehaviour
     public delegate void RecoilEvent(float force);
     public RecoilEvent recoilEvent;
 
+    //particle system for muzzle flash
+    ParticlePool muzzleFlash;
+
     private void Start()
     {
         if (weaponData.canAuto)
@@ -48,6 +51,9 @@ public class RangedWeapon : MonoBehaviour
         {
             collider.enabled = false;
         }
+
+        //particle setup
+        muzzleFlash = FindObjectOfType<ParticlePool>();
 
         //playerRecoilEvent.RemoveAllListeners();
     }
@@ -98,6 +104,7 @@ public class RangedWeapon : MonoBehaviour
     /// </summary>
     private void Shoot()
     {
+        muzzleFlash.GetParticle(muzzle.position, muzzle.forward);
 
         bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletVelocity);
 

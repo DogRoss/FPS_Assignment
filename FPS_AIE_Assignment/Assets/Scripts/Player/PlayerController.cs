@@ -43,7 +43,6 @@ public class PlayerController : Movement, IDamageable
     public float ADSRotationCoefficient = 2f;
     [Tooltip("how fast the gun points and move towards target Vectors")]
     public float aimingSnappiness = 10f;
-    public Image reticle;
 
     //Position
     private Vector3 targetRecoilPosition = Vector3.zero;
@@ -117,12 +116,10 @@ public class PlayerController : Movement, IDamageable
         if (value.Get<float>() > 0)
         {
             ads = true;
-            reticle.enabled = false;
         }
         else
         {
             ads = false;
-            reticle.enabled = true;
         }
     }
     private void OnSwitchFireMode()
