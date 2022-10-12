@@ -11,8 +11,8 @@ using UnityEngine.Events;
 public class RangedWeapon : MonoBehaviour
 {
     public Transform muzzle;
-    public Collider[] colliders;
-    public Rigidbody rb;
+    private Collider[] colliders;
+    private Rigidbody rb;
 
     [Header("Gun Data")]
     public RangedWeaponData weaponData;
@@ -25,18 +25,12 @@ public class RangedWeapon : MonoBehaviour
     private float storedClickTime = 0f;
     RaycastHit hit;
 
-    //Grab points and hand pose info here
-    public Transform rhtHandPos;
-    public Transform lftHandPos;
-
     public delegate void RecoilEvent(float force);
     public RecoilEvent recoilEvent;
 
-    //particle system for muzzle flash
-    ParticlePool muzzleFlash;
-
     private void Start()
     {
+
         if (weaponData.canAuto)
             auto = true;
         else
@@ -51,9 +45,6 @@ public class RangedWeapon : MonoBehaviour
         {
             collider.enabled = false;
         }
-
-        //particle setup
-        muzzleFlash = FindObjectOfType<ParticlePool>();
 
         //playerRecoilEvent.RemoveAllListeners();
     }
@@ -104,8 +95,6 @@ public class RangedWeapon : MonoBehaviour
     /// </summary>
     private void Shoot()
     {
-        muzzleFlash.GetParticle(muzzle.position, muzzle.forward);
-
         bool hitSuccess = Physics.Raycast(muzzle.position, muzzle.forward, out hit, weaponData.bulletVelocity);
 
         LineRenderer rend = Instantiate(weaponData.trail);

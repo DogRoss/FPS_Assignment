@@ -36,7 +36,7 @@ public class MovingPlatform : MonoBehaviour
         if(other.transform.TryGetComponent<Movement>(out Movement move))
         {
             other.transform.parent = transform;
-            move.SetForce(-move.Controller.velocity);
+            move.AddForce(-move.Controller.velocity, ForceMode.VelocityChange);
         }
     }
     private void OnTriggerExit(Collider other)

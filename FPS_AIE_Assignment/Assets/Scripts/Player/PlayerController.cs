@@ -76,9 +76,9 @@ public class PlayerController : Movement, IDamageable
 
         gun.recoilEvent += AddRecoil;
 
-        rc = GetComponentInChildren<RagdollController>();
-        if (!rc)
-            Debug.LogError("ERROR: couldnt grab RagdollController!");
+        //rc = GetComponentInChildren<RagdollController>();
+        //if (!rc)
+        //    Debug.LogError("ERROR: couldnt grab RagdollController!");
     }
     public override void Update()
     {
@@ -213,31 +213,31 @@ public class PlayerController : Movement, IDamageable
     /// </summary>
     private void HandleAnimation()
     {
-        if(CurrentSpeed > 0)
-        {
-            rc.Anim.SetBool("Idle", false);
-        }
-        else
-        {
-            rc.Anim.SetBool("Idle", true);
-        }
+        //if(CurrentSpeed > 0)
+        //{
+        //    rc.Anim.SetBool("Idle", false);
+        //}
+        //else
+        //{
+        //    rc.Anim.SetBool("Idle", true);
+        //}
 
-        //handle rig here
-        if (gun)
-        {
-            //rc.RigController.SetAimDirection(gun.muzzle.forward);
-            RaycastHit hit;
-            Ray ray = new Ray();
-            ray.origin = gun.muzzle.position;
-            ray.direction = gun.muzzle.forward;
-            Physics.Raycast(gun.muzzle.position, gun.muzzle.forward, out hit);
-            if (hit.collider)
-                rc.RigController.SetAimTargetPos(hit.point);
-            else
-                rc.RigController.SetAimTargetPos(transform.position + ray.direction * 200f);
+        ////handle rig here
+        //if (gun)
+        //{
+        //    //rc.RigController.SetAimDirection(gun.muzzle.forward);
+        //    RaycastHit hit;
+        //    Ray ray = new Ray();
+        //    ray.origin = gun.muzzle.position;
+        //    ray.direction = gun.muzzle.forward;
+        //    Physics.Raycast(gun.muzzle.position, gun.muzzle.forward, out hit);
+        //    if (hit.collider)
+        //        rc.RigController.SetAimTargetPos(hit.point);
+        //    else
+        //        rc.RigController.SetAimTargetPos(transform.position + ray.direction * 200f);
 
 
-        }
+        //}
     }
     private void EquipWeapon(int slot)
     {

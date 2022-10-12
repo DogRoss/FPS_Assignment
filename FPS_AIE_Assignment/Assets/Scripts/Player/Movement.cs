@@ -11,34 +11,54 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
-
+    #region Protected Variables
     protected CharacterController controller;
     protected Camera cam;
     protected bool movementEnabled = true;
+    #endregion
 
-    public Transform spawn;
+    #region Private Variables
+    //TODO: switch to enum
+    public MoveState moveState;
+    private bool crouching = false;
 
-    [Header("General Movement Values")]
+    private Vector3 currentGravity;
+    public bool doubleJumped = false;
+
+    private ControllerColliderHit wallPointHit;
+
+    //Input
+    private Vector3 direction = Vector3.zero;
+    protected Vector3 mouseVector = Vector3.zero;
+    //Applied Input
+    public Vector3 moveVelocity = Vector3.zero;
+    private Vector3 playerInputDirec = Vector3.zero;
+    #endregion
+
+    #region Public Variables
+    [Header("General Movement")]
+    public int groundLayer;
+    public int wallLayer;
     [Tooltip("Weight of player character (in kilograms)")]
     public float playerMass = 70f;
     [Tooltip("Rate at which Player gains speed.")]
     public float acceleration = 5f;
-    [Tooltip("acceleration rate of DownForce the player will experience when in the air.")]
-    public float gravity = 0.5f;
+    [Tooltip("rate and direction at which the player is pulled towards")]
+    public Vector3 gravity = Physics.gravity;
+    [Tooltip("X = regular gravity scale, Y = wall gravity scale.")]
+    public Vector2 gravityScale = new Vector2(1f, 1f);
     [Tooltip("force used to send player into the air.")]
     public float jumpForce = 10f;
-    public LayerMask groundMask;
 
-    private float currentVerticalSpeed = 0f;
-    private bool doubleJumped = false;
-
-    [Header("Ground Movement Values")]
-    [Tooltip("Ground Acceleration Coefficient: multiplied by 'Acceleration' to get the acceleration of Player when touching the ground.")]
-    public float GACoefficient = 1f;
-    [Tooltip("Coefficient of forces that act against the Player when in motion.")]
+    [Header("Counter Movement")]
+    [Tooltip("Coefficient of forces that act against the Player when in motion (used when on ground).")]
     [Range(0, 1)]
-    public float groundFrictionCoefficient = 0.1f;
-
+    public float groundFriction = 0.1f;
+    [Tooltip("X = horizontal, Y = vertical. Coefficient of forces that act against the Player when in motion (used when on wall).")]
+    public Vector2 wallFriction = new Vector2(.1f, .1f);
+    [Tooltip("Coefficient of forces that act against the Player when in motion (used when air).")]
+    [Range(0, 1)]
+    public float drag = 0.3f;
 
     [Header("Wall Movement Values")]
     [Tooltip("Wall Gravity Coefficient: Speed at which the Player falls while sliding on the wall.")]
@@ -49,47 +69,19 @@ public class Movement : MonoBehaviour
     public float WACoefficient = 1f;
     [Tooltip("Wall Jump Coefficient: multiplied by jump force to get force when jumping on wall, z is forward of player")]
     public Vector3 WJCoefficient = Vector3.zero;
-    [Tooltip("Coefficient of forces that act against the Player when in motion against a wall.")]
-    [Range(0, 1)]
-    public float wallFrictionCoefficient = 0.1f;
 
-    private ControllerColliderHit wallPointHit;
 
 
     [Header("Air Movement Values")]
     [Tooltip("Air Acceleration Coefficient: put desc here.")]
     public float AACoefficient = 5f;
-    [Tooltip("how much air drag affects the acceleration imposed by gravity.")]
-    [Range(0,1)]
-    public float verticalDragCoefficient = .25f;
-    [Tooltip("how much air drag affects the acceleration imposed by gravity.")]
-    [Range(0, 1)]
-    public float horizontalDragCoefficient = .25f;
 
     [Header("Camera Values")]
     public float sensitivity = 0.5f;
     public float maxLookAngle;
+    #endregion
 
-    //Raycast/Ground Check
-    public bool grounded;
-    private bool touchingWall;
-    private bool crouching = false;
-
-
-    //Input
-    private Vector3 direction = Vector3.zero;
-    protected Vector3 mouseVector = Vector3.zero;
-    //Applied Input
-    public Vector3 moveVec = Vector3.zero;
-    public Vector3 addedVelocity = Vector3.zero;
-    private Vector3 playerInputDirec = Vector3.zero;
-
-    //Temp variables
-    //TODO: redo varaibles  or delete
-
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Built In Engine Functions
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #region Built In Engine Functions
     public virtual void Start()
     {
 
@@ -99,57 +91,43 @@ public class Movement : MonoBehaviour
     public virtual void Update()
     {
         HandleCamera();
-
     }
     public virtual void FixedUpdate()
     {
         if (movementEnabled)
         {
 
-            if (controller.collisionFlags == CollisionFlags.None)
+            if (moveState == 0 && controller.collisionFlags == CollisionFlags.None)
             {
-                grounded = false;
+                moveState = (MoveState)1;
             }
-
-            Debug.DrawLine(transform.position, transform.position + (Vector3.down * ((controller.height / 2) + 0.3f)), Color.magenta);
-
-            if (controller.collisionFlags != CollisionFlags.Sides)
-                touchingWall = false;
-            //if (controller.collisionFlags != CollisionFlags.None)
-            //    grounded = false;
+            else if (moveState == (MoveState)2 && controller.collisionFlags != CollisionFlags.Sides)
+                moveState = (MoveState)1;
 
             //apply forces to controller
-            if (grounded)
+            switch (moveState)
             {
-                GroundMovement();
-                GroundFriction();
-            }
-            else if (!touchingWall)
-            {
-                //account for gravity
-                AirMovement();
-                AirDrag();
-            }
-            else
-            {
-                //is touching wall, so account for wall slide
-                WallSlide();
-                WallFriction();
+                case 0:             //Ground
+                    GroundMovement();
+                    ApplyFriction();
+                    break;
+                case (MoveState)1:  //Air
+                    AirMovement();
+                    break;
+                case (MoveState)2:  //Wall
+                    WallSlide();
+                    ApplyFriction();
+                    break;
             }
 
-            moveVec.y = currentVerticalSpeed;
-            moveVec += addedVelocity;
-            addedVelocity = Vector3.zero;
-            controller.Move(moveVec * Time.deltaTime);
+            ApplyDrag();
+            ApplyGravity();
+
+            controller.Move(moveVelocity * Time.deltaTime);
         }
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        if(hit.gameObject.layer == LayerMask.NameToLayer("Death"))
-        {
-            controller.transform.position = spawn.position;
-        }
-
         if(hit.transform.root.TryGetComponent<RagdollController>(out RagdollController rgdc))
         {
             rgdc.RagdollEnabled = true;
@@ -163,15 +141,13 @@ public class Movement : MonoBehaviour
         if (hit.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
             print("entteeeer");
-            touchingWall = false;
-            grounded = true;
+            moveState = 0;
             if (doubleJumped)
                 doubleJumped = false;
         }
-        else if (!grounded && hit.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        else if (moveState != 0 && hit.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
-            touchingWall = true;
-            grounded = false;
+            moveState = (MoveState)2;
             wallPointHit = hit;
             if (doubleJumped)
                 doubleJumped = false;
@@ -186,9 +162,9 @@ public class Movement : MonoBehaviour
 
         Debug.DrawLine(transform.position, transform.position + playerInputDirec, Color.green);
     }
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Input System Functions
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #endregion
+
+    #region Input System Functions
     private void OnMove(InputValue value)
     {
         direction = value.Get<Vector3>().normalized;
@@ -197,9 +173,12 @@ public class Movement : MonoBehaviour
     {
         if (value.Get<float>() > 0)
         {
-            if (grounded)
+            if (moveState == 0)
+            {
+                moveVelocity.y = 0;
                 Jump(false);
-            else if (touchingWall)
+            }
+            else if (moveState == (MoveState)2)
                 Jump(true);
             else if (!doubleJumped)
             {
@@ -213,11 +192,9 @@ public class Movement : MonoBehaviour
         mouseVector.x = -value.Get<Vector2>().y;
         mouseVector.y = value.Get<Vector2>().x;
     }
+    #endregion
 
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Getters
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+    #region Getter/Setter Functions
     public float CurrentSpeed
     {
         get
@@ -247,11 +224,9 @@ public class Movement : MonoBehaviour
             return controller;
         }
     }
+    #endregion
 
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // Player Functions
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+    #region Player Functions
     /// <summary>
     /// Handles camera movement for looking around
     /// </summary>
@@ -276,26 +251,12 @@ public class Movement : MonoBehaviour
          * with direction, use that and air acceleration to act against the stored velocity;
          * return velocity; */
 
-        //make sure we are grounded
-        if (grounded)
-        {
-            return;
-        }
-
-        currentVerticalSpeed -= gravity;
-
-        //store velocity
-        Vector3 vel = moveVec;
-        vel.y = 0;
-
         //get directional input and account for player forward
         Vector3 forces = transform.forward * direction.z + transform.right * direction.x;
         //get acceleration rate
         forces *= acceleration * AACoefficient;
-        //apply forces
-        vel += forces;
 
-        moveVec = vel;
+        AddForce(forces);
     }
 
     /// <summary>
@@ -308,58 +269,16 @@ public class Movement : MonoBehaviour
          * with direction, use that and ground acceleration to act against the stored velocity;
          * return velocity; */
 
-        //make sure we are grounded
-        if (!grounded)
-            return;
-
-        currentVerticalSpeed = -.1f;
-
-        //store velocity
-        Vector3 vel = controller.velocity;
-        vel.y = 0;
+        //TODO: set gravity lower here
 
         //get directional input and account for player forward
         Vector3 forces = transform.forward * direction.z + transform.right * direction.x;
 
         //get acceleration rate
-        forces *= acceleration * GACoefficient;
-
-        //apply forces
-        vel += forces;
-
-        moveVec = vel;
-    }
+        forces *= acceleration;
 
 
-    /// <summary>
-    /// Handles forces that oppose Player's movement on the ground
-    /// </summary>
-    private void GroundFriction()
-    {
-        Vector3 counterForce = Vector3.zero;
-
-        if (controller.velocity.x != 0)
-            counterForce.x = controller.velocity.x * groundFrictionCoefficient;
-        if (controller.velocity.z != 0)
-            counterForce.z = controller.velocity.z * groundFrictionCoefficient;
-
-        moveVec -= counterForce;
-    }
-    /// <summary>
-    /// Handles Forces in air that oppose Player's movement through the air 
-    /// </summary>
-    private void AirDrag()
-    {
-        Vector3 counterForce = Vector3.zero;
-
-        if (controller.velocity.magnitude > 0)
-        {
-            counterForce.x = controller.velocity.x * horizontalDragCoefficient;
-            currentVerticalSpeed -= currentVerticalSpeed * verticalDragCoefficient;
-            counterForce.z = controller.velocity.z * horizontalDragCoefficient;
-        }
-
-        moveVec -= counterForce;
+        AddForce(forces);
     }
 
 
@@ -371,16 +290,17 @@ public class Movement : MonoBehaviour
     {
         if (!wallJump)
         {
-            currentVerticalSpeed = jumpForce;
+            AddForce(Vector2.up * jumpForce * playerMass);
         }
         else
         { 
-            touchingWall = false;
-            moveVec += wallPointHit.normal * (jumpForce * WJCoefficient.x) + (transform.forward * (jumpForce * WJCoefficient.z));
-            currentVerticalSpeed = jumpForce * WJCoefficient.y;
+            //TODO: change moveState off of wall
+            //moveVelocity += wallPointHit.normal * (jumpForce * WJCoefficient.x) + (transform.forward * (jumpForce * WJCoefficient.z));
+            //currentVerticalSpeed = jumpForce * WJCoefficient.y;
+            //AddForce()
         }
 
-        grounded = false;
+        //grounded = false;
     }
     /// <summary>
     /// Handles how the Player moves against the wall in a sliding motion
@@ -393,7 +313,7 @@ public class Movement : MonoBehaviour
          * the description goes here but im just waaaay too tired rn
          */
 
-        if (!touchingWall)
+        if (moveState != (MoveState)2)
             return;
 
         //store input in relation to where the player is facing
@@ -401,7 +321,7 @@ public class Movement : MonoBehaviour
         playerInputDirec.y = 0;
 
         //take current velocity and transfer to wall plane
-        moveVec = Vector3.ProjectOnPlane(moveVec - (Vector3.up * -moveVec.y), wallPointHit.normal);
+        moveVelocity = Vector3.ProjectOnPlane(moveVelocity - (Vector3.up * -moveVelocity.y), wallPointHit.normal);
 
         //measure forces and apply to plane
         Vector3 forces = playerInputDirec * (acceleration * WACoefficient);
@@ -409,39 +329,80 @@ public class Movement : MonoBehaviour
         forces -= wallPointHit.normal;
 
         //add to movement vector
-        moveVec += forces;
+        moveVelocity += forces;
     }
-    /// <summary>
-    /// handles how counteracting forces affect Player's movement
-    /// </summary>
-    private void WallFriction()
-    {
-        //calculate gravity on wall
-        if (currentVerticalSpeed > -gravity * MWGCoefficient)
-            currentVerticalSpeed = controller.velocity.y - (gravity * WGCoefficient);
-        else
-            currentVerticalSpeed -= currentVerticalSpeed * wallFrictionCoefficient;
-        //currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -gravity * MWGCoefficient, Mathf.Infinity);
 
+    private void ApplyDrag()
+    {
         Vector3 counterForce = Vector3.zero;
 
-        if (CurrentHorizontalSpeed > 0)
+        if (controller.velocity.magnitude > 0)
         {
-            counterForce.x = controller.velocity.x * wallFrictionCoefficient;
-            counterForce.z = controller.velocity.z * wallFrictionCoefficient;
+            counterForce.x = controller.velocity.x * drag;
+            counterForce.y = controller.velocity.y * drag;
+            counterForce.z = controller.velocity.z * drag;
         }
-        
-        moveVec -= counterForce;
+
+        AddForce(-counterForce);
+    }
+    private void ApplyFriction()
+    {
+        Vector3 counterForce = Vector3.zero;
+
+        switch (moveState)
+        {
+            case 0:
+                print("ground fric");
+                if (CurrentHorizontalSpeed != 0)
+                    counterForce.x = controller.velocity.x * groundFriction;
+                    counterForce.z = controller.velocity.z * groundFriction;
+                break;
+            case (MoveState)2:
+                if (CurrentHorizontalSpeed > 0)
+                    counterForce.x = controller.velocity.x * wallFriction.x;
+                    counterForce.y = controller.velocity.y * wallFriction.y;
+                    counterForce.z = controller.velocity.z * wallFriction.x;
+                break;
+        }
+
+        AddForce(-counterForce);
+    }
+    private void ApplyGravity()
+    {
+        switch (moveState)
+        {
+            case 0:
+                currentGravity = Vector3.zero;
+                break;
+            case (MoveState)1:
+                currentGravity = Physics.gravity * gravityScale.x;
+                break;
+            case (MoveState)2:
+                currentGravity = Physics.gravity * gravityScale.y;
+                break;
+        }
+
+        AddForce(currentGravity * playerMass, ForceMode.Force);
     }
 
-    public void AddForce(Vector3 force)
+    public void AddForce(Vector3 force, ForceMode forceType = ForceMode.Force)
     {
-        print("AddForce called");
-        addedVelocity += force;
+        switch (forceType)
+        {
+            case ForceMode.Force:
+                moveVelocity += force * (1.0f / playerMass);
+                break;
+            case ForceMode.Impulse:
+                moveVelocity += force * playerMass;
+                break;
+            case ForceMode.Acceleration:
+                moveVelocity += force;
+                break;
+            case ForceMode.VelocityChange:
+                moveVelocity = force;
+                break;
+        }
     }
 
-    public void SetForce(Vector3 force)
-    {
-        addedVelocity = force;
-    }
+    #endregion
 }
